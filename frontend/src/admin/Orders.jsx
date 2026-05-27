@@ -13,7 +13,7 @@ function Orders() {
 
   const fetchOrders = async () => {
     try {
-      const res = await api.get("/orders");
+      const res = await api.get("/api/orders");
 
       setOrders(res.data);
     } catch (error) {
@@ -23,7 +23,7 @@ function Orders() {
 
   const updateStatus = async (id, status) => {
     try {
-      await api.patch(`/orders/${id}`, {
+      await api.patch(`/api/orders/${id}`, {
         status,
       });
 

@@ -19,7 +19,7 @@ function Admin() {
 
   const fetchItems = async () => {
     try {
-      const res = await api.get("/items");
+      const res = await api.get("/api/items");
 
       setItems(res.data);
     } catch (error) {
@@ -39,7 +39,7 @@ function Admin() {
 
       formData.append("image", image);
 
-      await api.post("/items", formData);
+      await api.post("/api/items", formData);
 
       alert("Item Added");
 
@@ -61,7 +61,7 @@ function Admin() {
 
       if (!confirmDelete) return;
 
-      await api.delete(`/items/${id}`);
+      await api.delete(`/api/items/${id}`);
 
       alert("Item Deleted");
 

@@ -28,7 +28,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart }) {
           quantity: cart[item._id],
         }));
 
-      const { data } = await api.post("/payment/create-order", {
+      const { data } = await api.post("/api/payment/create-order", {
         customerName,
         department,
         pickupTime,
@@ -52,7 +52,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart }) {
 
         handler: async function (response) {
           try {
-            await api.post("/payment/verify-payment", {
+            await api.post("/api/payment/verify-payment", {
               razorpay_order_id: response.razorpay_order_id,
 
               razorpay_payment_id: response.razorpay_payment_id,

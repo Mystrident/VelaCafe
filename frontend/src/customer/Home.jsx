@@ -27,7 +27,7 @@ function Home() {
 
   const fetchItems = async () => {
     try {
-      const res = await api.get("/items");
+      const res = await api.get("/api/items");
 
       setItems(res.data);
     } catch (error) {
