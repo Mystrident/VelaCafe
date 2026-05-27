@@ -1,26 +1,5 @@
 const Order = require("../models/Order");
 
-const createOrder = async (req, res) => {
-  try {
-    const { customerName, department, pickupTime, items, totalAmount } =
-      req.body;
-
-    const order = new Order({
-      customerName,
-      department,
-      pickupTime,
-      items: JSON.parse(items),
-      totalAmount,
-    });
-
-    await order.save();
-
-    res.status(201).json(order);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
 const getOrders = async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });
@@ -62,7 +41,6 @@ const updateOrderStatus = async (req, res) => {
 };
 
 module.exports = {
-  createOrder,
   getOrders,
   updateOrderStatus,
 };

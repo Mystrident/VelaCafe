@@ -12,8 +12,6 @@ const protect = require("../middleware/authMiddleware");
 
 router.get("/", protect, getOrders);
 
-router.post("/", createOrder);
-
 router.patch("/:id", protect, updateOrderStatus);
 
 module.exports = router;
