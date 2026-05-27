@@ -1,10 +1,11 @@
-const optimizeImage = (url, width = 400) => {
+const optimizeImage = (url, width = 500) => {
   if (!url) return "";
 
-  return url.replace(
-    "/upload/",
-    `/upload/f_auto,q_auto,dpr_auto,w_${width},c_fill`,
-  );
+  if (!url.includes("cloudinary")) {
+    return url;
+  }
+
+  return url.replace("/upload/", `/upload/f_auto,q_auto,w_${width}/`);
 };
 
 export default optimizeImage;
