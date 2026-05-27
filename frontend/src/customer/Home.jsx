@@ -55,23 +55,112 @@ function Home() {
     return total + item.price * (cart[item._id] || 0);
   }, 0);
 
+  const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
+
   return (
-    <div className="pb-40">
+    <div
+      className="
+        bg-[#fffaf5]
+        min-h-screen
+      "
+    >
       <Navbar />
 
       <HeroCarousel />
 
-      <FoodGrid
-        items={items}
-        cart={cart}
-        increaseQty={increaseQty}
-        decreaseQty={decreaseQty}
-      />
+      <div
+        id="menu-section"
+        className="
+          max-w-7xl
+          mx-auto
+          px-4
+          md:px-10
+          py-20
+        "
+      >
+        <div
+          className="
+            flex
+            flex-col
+            md:flex-row
+            md:items-center
+            md:justify-between
+            gap-6
+            mb-14
+          "
+        >
+          <div>
+            <h1
+              className="
+                text-4xl
+                md:text-5xl
+                font-black
+                text-[#4b1e14]
+              "
+            >
+              Popular Dishes
+            </h1>
 
-      <FloatingCart
-        totalAmount={totalAmount}
-        onCheckout={() => setShowCheckout(true)}
-      />
+            <p
+              className="
+                mt-3
+                text-[#7a5a49]
+                text-lg
+              "
+            >
+              Freshly prepared café favourites waiting for you.
+            </p>
+          </div>
+
+          <div
+            className="
+              bg-white
+              px-6
+              py-4
+              rounded-2xl
+              shadow-md
+              flex
+              items-center
+              gap-4
+              w-fit
+            "
+          >
+            <div
+              className="
+                w-4
+                h-4
+                rounded-full
+                bg-green-500
+                animate-pulse
+              "
+            />
+
+            <span
+              className="
+                font-semibold
+                text-[#4b1e14]
+              "
+            >
+              {items.length} items available
+            </span>
+          </div>
+        </div>
+
+        <FoodGrid
+          items={items}
+          cart={cart}
+          increaseQty={increaseQty}
+          decreaseQty={decreaseQty}
+        />
+      </div>
+
+      {totalAmount > 0 && (
+        <FloatingCart
+          totalAmount={totalAmount}
+          totalItems={totalItems}
+          onCheckout={() => setShowCheckout(true)}
+        />
+      )}
 
       {showCheckout && (
         <CheckoutModal

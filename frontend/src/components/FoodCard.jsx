@@ -1,12 +1,14 @@
+import { FaMinus, FaPlus } from "react-icons/fa";
+
 function FoodCard({ item, quantity, increaseQty, decreaseQty }) {
   return (
     <div
       className="
         bg-white
-        rounded-3xl
+        rounded-[30px]
         overflow-hidden
         shadow-md
-        hover:scale-105
+        hover:shadow-2xl
         transition
       "
     >
@@ -15,16 +17,17 @@ function FoodCard({ item, quantity, increaseQty, decreaseQty }) {
         alt={item.name}
         className="
           w-full
-          h-52
+          h-60
           object-cover
         "
       />
 
-      <div className="p-4">
+      <div className="p-5">
         <h2
           className="
-            text-xl
+            text-2xl
             font-bold
+            text-[#4b1e14]
           "
         >
           {item.name}
@@ -32,9 +35,10 @@ function FoodCard({ item, quantity, increaseQty, decreaseQty }) {
 
         <p
           className="
-            text-orange-500
-            font-semibold
             mt-2
+            text-orange-500
+            font-bold
+            text-lg
           "
         >
           ₹{item.price}
@@ -44,35 +48,48 @@ function FoodCard({ item, quantity, increaseQty, decreaseQty }) {
           className="
             flex
             items-center
-            gap-4
-            mt-4
+            gap-5
+            mt-5
           "
         >
           <button
             onClick={() => decreaseQty(item._id)}
             className="
-              bg-gray-200
-              px-3
-              py-1
+              w-10
+              h-10
               rounded-full
+              bg-gray-100
+              flex
+              items-center
+              justify-center
             "
           >
-            -
+            <FaMinus />
           </button>
 
-          <span>{quantity}</span>
+          <span
+            className="
+              text-xl
+              font-bold
+            "
+          >
+            {quantity}
+          </span>
 
           <button
             onClick={() => increaseQty(item._id)}
             className="
+              w-10
+              h-10
+              rounded-full
               bg-orange-500
               text-white
-              px-3
-              py-1
-              rounded-full
+              flex
+              items-center
+              justify-center
             "
           >
-            +
+            <FaPlus />
           </button>
         </div>
       </div>
