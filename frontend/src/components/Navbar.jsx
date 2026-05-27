@@ -88,11 +88,19 @@ function Navbar() {
             text-[#5c1f16]
           "
         >
-          <button>HOME</button>
-
           <button onClick={scrollToMenu}>MENU</button>
 
-          <button>CONTACT</button>
+          <button
+            onClick={() => {
+              const section = document.getElementById("contact-section");
+
+              section.scrollIntoView({
+                behavior: "smooth",
+              });
+            }}
+          >
+            CONTACT
+          </button>
         </div>
 
         <button

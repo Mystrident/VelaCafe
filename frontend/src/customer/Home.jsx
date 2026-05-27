@@ -12,6 +12,8 @@ import FloatingCart from "../components/FloatingCart";
 
 import CheckoutModal from "../components/CheckoutModal";
 
+import Footer from "../components/Footer";
+
 function Home() {
   const [items, setItems] = useState([]);
 
@@ -170,6 +172,8 @@ function Home() {
           clearCart={clearCart}
         />
       )}
+
+      <Footer />
     </div>
   );
 }
