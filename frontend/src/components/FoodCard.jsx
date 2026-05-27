@@ -1,5 +1,7 @@
 import { FaMinus, FaPlus } from "react-icons/fa";
 
+import optimizeImage from "../utils/optimizeImage";
+
 function FoodCard({ item, quantity, increaseQty, decreaseQty }) {
   return (
     <div
@@ -13,8 +15,9 @@ function FoodCard({ item, quantity, increaseQty, decreaseQty }) {
       "
     >
       <img
-        src={item.image}
+        src={optimizeImage(item.image, 500)}
         alt={item.name}
+        loading="lazy"
         className="
           w-full
           h-60
