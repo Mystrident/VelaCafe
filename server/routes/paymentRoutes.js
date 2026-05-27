@@ -7,7 +7,9 @@ const {
   verifyPayment,
 } = require("../controllers/paymentController");
 
-router.post("/create-order", createRazorpayOrder);
+const { validateOrder } = require("../middleware/validators");
+
+router.post("/create-order", validateOrder, createRazorpayOrder);
 
 router.post("/verify-payment", verifyPayment);
 

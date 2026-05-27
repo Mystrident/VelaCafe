@@ -13,9 +13,11 @@ const upload = require("../middleware/upload");
 
 const protect = require("../middleware/authMiddleware");
 
+const { validateItem } = require("../middleware/validators");
+
 router.get("/", getItems);
 
-router.post("/", protect, upload.single("image"), addItem);
+router.post("/", protect, upload.single("image"), validateItem, addItem);
 
 router.delete("/:id", protect, deleteItem);
 
