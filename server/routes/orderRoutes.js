@@ -8,13 +8,11 @@ const {
   updateOrderStatus,
 } = require("../controllers/orderController");
 
-const upload = require("../middleware/upload");
-
 const protect = require("../middleware/authMiddleware");
 
-router.post("/", upload.single("paymentScreenshot"), createOrder);
-
 router.get("/", protect, getOrders);
+
+router.post("/", createOrder);
 
 router.patch("/:id", protect, updateOrderStatus);
 

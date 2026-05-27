@@ -30,7 +30,7 @@ const loginAdmin = async (req, res) => {
       {
         id: admin._id,
       },
-      "secretkey",
+      process.env.JWT_SECRET,
       {
         expiresIn: "7d",
       },

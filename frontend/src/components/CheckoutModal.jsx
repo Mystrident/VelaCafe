@@ -2,49 +2,100 @@ import { useState } from "react";
 
 import api from "../api/axios";
 
-function CheckoutModal({ items, cart, totalAmount, closeModal, clearCart }) {
+function CheckoutModal({ items, cart, closeModal, clearCart }) {
   const [customerName, setCustomerName] = useState("");
 
   const [department, setDepartment] = useState("");
 
   const [pickupTime, setPickupTime] = useState("");
 
-  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleOrder = async () => {
+  const handlePayment = async () => {
     try {
+      if (!customerName || !department || !pickupTime) {
+        alert("Please fill all fields");
+
+        return;
+      }
+
+      setLoading(true);
+
       const orderedItems = items
         .filter((item) => cart[item._id] > 0)
         .map((item) => ({
           itemId: item._id,
-          name: item.name,
           quantity: cart[item._id],
-          price: item.price,
         }));
 
-      const formData = new FormData();
+      const { data } = await api.post("/payment/create-order", {
+        customerName,
+        department,
+        pickupTime,
+        items: orderedItems,
+      });
 
-      formData.append("customerName", customerName);
+      const { razorpayOrder, validatedItems, totalAmount } = data;
 
-      formData.append("department", department);
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
 
-      formData.append("pickupTime", pickupTime);
+        amount: razorpayOrder.amount,
 
-      formData.append("items", JSON.stringify(orderedItems));
+        currency: "INR",
 
-      formData.append("totalAmount", totalAmount);
+        name: "VELAA CAFE",
 
-      formData.append("paymentScreenshot", paymentScreenshot);
+        description: "Food Order Payment",
 
-      await api.post("/orders", formData);
+        order_id: razorpayOrder.id,
 
-      alert("Order Placed");
+        handler: async function (response) {
+          try {
+            await api.post("/payment/verify-payment", {
+              razorpay_order_id: response.razorpay_order_id,
 
-      clearCart();
+              razorpay_payment_id: response.razorpay_payment_id,
 
-      closeModal();
+              razorpay_signature: response.razorpay_signature,
+
+              customerName,
+
+              department,
+
+              pickupTime,
+
+              items: validatedItems,
+
+              totalAmount,
+            });
+
+            alert("Payment Successful & Order Placed");
+
+            clearCart();
+
+            closeModal();
+          } catch (error) {
+            console.log(error);
+
+            alert("Payment verification failed");
+          }
+        },
+
+        theme: {
+          color: "#f97316",
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+
+      razorpay.open();
     } catch (error) {
       console.log(error);
+
+      alert("Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -58,6 +109,7 @@ function CheckoutModal({ items, cart, totalAmount, closeModal, clearCart }) {
         justify-center
         items-center
         z-50
+        px-4
       "
     >
       <div
@@ -65,7 +117,8 @@ function CheckoutModal({ items, cart, totalAmount, closeModal, clearCart }) {
           bg-white
           p-8
           rounded-3xl
-          w-[400px]
+          w-full
+          max-w-md
         "
       >
         <h1
@@ -73,6 +126,7 @@ function CheckoutModal({ items, cart, totalAmount, closeModal, clearCart }) {
             text-3xl
             font-bold
             mb-6
+            text-[#4b1e14]
           "
         >
           Checkout
@@ -129,57 +183,9 @@ function CheckoutModal({ items, cart, totalAmount, closeModal, clearCart }) {
           "
         />
 
-        <p
-          className="
-            mb-3
-            font-semibold
-          "
-        >
-          Upload Payment Screenshot
-        </p>
-
-        <label
-          className="
-            flex
-            items-center
-            justify-center
-            w-full
-            py-4
-            rounded-2xl
-            bg-orange-500
-            text-white
-            font-bold
-            cursor-pointer
-            shadow-lg
-            shadow-orange-300
-            hover:scale-105
-            hover:bg-orange-600
-            transition
-            duration-300
-          "
-        >
-          Choose Screenshot
-          <input
-            type="file"
-            onChange={(e) => setPaymentScreenshot(e.target.files[0])}
-            className="hidden"
-          />
-        </label>
-
-        {paymentScreenshot && (
-          <p
-            className="
-              mt-3
-              text-sm
-              text-gray-600
-            "
-          >
-            {paymentScreenshot.name}
-          </p>
-        )}
-
         <button
-          onClick={handleOrder}
+          onClick={handlePayment}
+          disabled={loading}
           className="
             bg-orange-500
             text-white
@@ -187,14 +193,15 @@ function CheckoutModal({ items, cart, totalAmount, closeModal, clearCart }) {
             py-4
             rounded-2xl
             w-full
-            mt-6
+            mt-4
             font-bold
             text-lg
             hover:bg-orange-600
             transition
+            disabled:opacity-50
           "
         >
-          Place Order
+          {loading ? "Processing..." : "Pay Now"}
         </button>
 
         <button

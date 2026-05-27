@@ -166,7 +166,6 @@ function Home() {
         <CheckoutModal
           items={items}
           cart={cart}
-          totalAmount={totalAmount}
           closeModal={() => setShowCheckout(false)}
           clearCart={clearCart}
         />

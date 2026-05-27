@@ -1,30 +1,67 @@
+require("dotenv").config();
+
 const express = require("express");
-const dotenv = require("dotenv");
+
+const helmet = require("helmet");
+
 const cors = require("cors");
+
+const hpp = require("hpp");
+
+const rateLimit = require("express-rate-limit");
+
+const mongoSanitize = require("mongo-sanitize");
 
 const connectDB = require("./config/db");
 
-dotenv.config();
+const itemRoutes = require("./routes/itemRoutes");
 
-connectDB();
+const orderRoutes = require("./routes/orderRoutes");
+
+const authRoutes = require("./routes/authRoutes");
+
+const paymentRoutes = require("./routes/paymentRoutes");
 
 const app = express();
 
-app.use(cors());
+connectDB();
+
+app.use(helmet());
+
+app.use(
+  cors({
+    origin: "*",
+  }),
+);
 
 app.use(express.json());
 
-app.use(express.urlencoded({ extended: true }));
-
-app.get("/", (req, res) => {
-  res.send("API Running");
+app.use((req, res, next) => {
+  req.body = mongoSanitize(req.body);
+  next();
 });
 
-app.use("/api/items", require("./routes/itemRoutes"));
+app.use(hpp());
 
-app.use("/api/orders", require("./routes/orderRoutes"));
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests. Please try again later.",
+});
 
-app.use("/api/auth", require("./routes/authRoutes"));
+app.use(limiter);
+
+app.get("/", (req, res) => {
+  res.send("VELAA CAFE API RUNNING");
+});
+
+app.use("/api/items", itemRoutes);
+
+app.use("/api/orders", orderRoutes);
+
+app.use("/api/admin", authRoutes);
+
+app.use("/api/payment", paymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 

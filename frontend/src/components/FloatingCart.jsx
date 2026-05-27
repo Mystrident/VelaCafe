@@ -1,4 +1,4 @@
-function FloatingCart({ totalAmount, onCheckout }) {
+function FloatingCart({ totalAmount, totalItems, onCheckout }) {
   if (totalAmount <= 0) return null;
 
   return (
@@ -10,17 +10,24 @@ function FloatingCart({ totalAmount, onCheckout }) {
         -translate-x-1/2
         bg-orange-500
         text-white
-        px-8
+        px-6
         py-4
         rounded-full
         shadow-xl
         flex
-        gap-10
+        gap-6
         items-center
         z-50
+        w-[95%]
+        md:w-fit
+        justify-between
       "
     >
-      <h2>Total: ₹{totalAmount}</h2>
+      <div>
+        <h2 className="font-bold text-lg">{totalItems} Items</h2>
+
+        <p>₹{totalAmount}</p>
+      </div>
 
       <button
         onClick={onCheckout}

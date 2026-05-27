@@ -11,8 +11,6 @@ const createOrder = async (req, res) => {
       pickupTime,
       items: JSON.parse(items),
       totalAmount,
-
-      paymentScreenshot: req.file ? req.file.path : "",
     });
 
     await order.save();
@@ -35,7 +33,21 @@ const getOrders = async (req, res) => {
 
 const updateOrderStatus = async (req, res) => {
   try {
+    const allowedStatuses = ["Pending", "Preparing", "Ready", "Completed"];
+
+    if (!allowedStatuses.includes(req.body.status)) {
+      return res.status(400).json({
+        message: "Invalid status",
+      });
+    }
+
     const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
 
     order.status = req.body.status;
 
@@ -43,7 +55,9 @@ const updateOrderStatus = async (req, res) => {
 
     res.json(order);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
