@@ -1,5 +1,7 @@
 require("dotenv").config();
 
+require("./jobs/deleteOldOrders");
+
 const express = require("express");
 
 const helmet = require("helmet");

@@ -45,9 +45,28 @@ function Orders() {
             <div key={order._id} className="bg-white rounded-3xl shadow-lg p-6">
               <div className="flex justify-between items-start flex-wrap gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-[#4b1e14]">
-                    {order.customerName}
-                  </h2>
+                  <div>
+                    <h2
+                      className="
+      text-3xl
+      font-black
+      text-orange-500
+    "
+                    >
+                      #{String(order.orderNumber).padStart(3, "0")}
+                    </h2>
+
+                    <h3
+                      className="
+      text-2xl
+      font-bold
+      text-[#4b1e14]
+      mt-2
+    "
+                    >
+                      {order.customerName}
+                    </h3>
+                  </div>
 
                   <p className="mt-2 text-gray-600">
                     Department: {order.department}

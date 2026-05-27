@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const razorpay = require("../config/razorpay");
 
 const Order = require("../models/Order");
+
 const Item = require("../models/Item");
 
 const createRazorpayOrder = async (req, res) => {
@@ -89,14 +90,33 @@ const verifyPayment = async (req, res) => {
       });
     }
 
+    const today = new Date().toISOString().split("T")[0];
+
+    const todayOrders = await Order.countDocuments({
+      orderDate: today,
+    });
+
+    const orderNumber = todayOrders + 1;
+
     const order = new Order({
       customerName,
+
       department,
+
       pickupTime,
+
       items,
+
       totalAmount,
+
+      orderNumber,
+
+      orderDate: today,
+
       paymentStatus: "PAID",
+
       razorpayOrderId: razorpay_order_id,
+
       razorpayPaymentId: razorpay_payment_id,
     });
 
@@ -104,6 +124,7 @@ const verifyPayment = async (req, res) => {
 
     res.status(201).json({
       message: "Payment successful",
+
       order,
     });
   } catch (error) {
