@@ -6,135 +6,139 @@ const Order = require("../models/Order");
 
 const Item = require("../models/Item");
 
+const User = require("../models/User");
+
 const createRazorpayOrder = async (req, res) => {
-  try {
-    const { customerName, department, pickupTime, items } = req.body;
+try {
+const { pickupTime, items } = req.body;
 
-    if (!items || items.length === 0) {
-      return res.status(400).json({
-        message: "No items provided",
-      });
-    }
 
-    let totalAmount = 0;
+if (!items || items.length === 0) {
+  return res.status(400).json({
+    message: "No items provided",
+  });
+}
 
-    const validatedItems = [];
+let totalAmount = 0;
 
-    for (const cartItem of items) {
-      const item = await Item.findById(cartItem.itemId);
+const validatedItems = [];
 
-      if (!item) {
-        return res.status(404).json({
-          message: "Item not found",
-        });
-      }
+for (const cartItem of items) {
+  const item = await Item.findById(cartItem.itemId);
 
-      const quantity = Number(cartItem.quantity);
-
-      totalAmount += item.price * quantity;
-
-      validatedItems.push({
-        itemId: item._id,
-        name: item.name,
-        quantity,
-        price: item.price,
-      });
-    }
-
-    const options = {
-      amount: totalAmount * 100,
-      currency: "INR",
-      receipt: `receipt_${Date.now()}`,
-    };
-
-    const razorpayOrder = await razorpay.orders.create(options);
-
-    res.json({
-      razorpayOrder,
-      customerName,
-      department,
-      pickupTime,
-      validatedItems,
-      totalAmount,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
+  if (!item) {
+    return res.status(404).json({
+      message: "Item not found",
     });
   }
+
+  const quantity = Number(cartItem.quantity);
+
+  totalAmount += item.price * quantity;
+
+  validatedItems.push({
+    itemId: item._id,
+    name: item.name,
+    quantity,
+    price: item.price,
+  });
+}
+
+const options = {
+  amount: totalAmount * 100,
+  currency: "INR",
+  receipt: `receipt_${Date.now()}`,
+};
+
+const razorpayOrder = await razorpay.orders.create(options);
+
+res.json({
+  razorpayOrder,
+  pickupTime,
+  validatedItems,
+  totalAmount,
+});
+
+
+} catch (error) {
+res.status(500).json({
+message: error.message,
+});
+}
 };
 
 const verifyPayment = async (req, res) => {
-  try {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      customerName,
-      department,
-      pickupTime,
-      items,
-      totalAmount,
-    } = req.body;
+try {
+const {
+razorpay_order_id,
+razorpay_payment_id,
+razorpay_signature,
+pickupTime,
+items,
+totalAmount,
+} = req.body;
 
-    const generatedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(razorpay_order_id + "|" + razorpay_payment_id)
-      .digest("hex");
+const generatedSignature = crypto
+  .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+  .update(razorpay_order_id + "|" + razorpay_payment_id)
+  .digest("hex");
 
-    const isAuthentic = generatedSignature === razorpay_signature;
+const isAuthentic = generatedSignature === razorpay_signature;
 
-    if (!isAuthentic) {
-      return res.status(400).json({
-        message: "Payment verification failed",
-      });
-    }
+if (!isAuthentic) {
+  return res.status(400).json({
+    message: "Payment verification failed",
+  });
+}
 
-    const today = new Date().toISOString().split("T")[0];
+const user = await User.findById(req.user.id);
 
-    const todayOrders = await Order.countDocuments({
-      orderDate: today,
-    });
+if (!user) {
+  return res.status(404).json({
+    message: "User not found",
+  });
+}
 
-    const orderNumber = todayOrders + 1;
+const totalOrders = await Order.countDocuments();
 
-    const order = new Order({
-      customerName,
+const orderNumber = totalOrders + 1;
 
-      department,
+const order = new Order({
+  userId: user._id,
 
-      pickupTime,
+  userName: user.name,
 
-      items,
+  userEmail: user.email,
 
-      totalAmount,
+  pickupTime,
 
-      orderNumber,
+  items,
 
-      orderDate: today,
+  totalAmount,
 
-      paymentStatus: "PAID",
+  orderNumber,
 
-      razorpayOrderId: razorpay_order_id,
+  paymentStatus: "PAID",
 
-      razorpayPaymentId: razorpay_payment_id,
-    });
+  razorpayOrderId: razorpay_order_id,
 
-    await order.save();
+  razorpayPaymentId: razorpay_payment_id,
+});
 
-    res.status(201).json({
-      message: "Payment successful",
+await order.save();
 
-      order,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
+res.status(201).json({
+  message: "Payment successful",
+  order,
+});
+} catch (error) {
+res.status(500).json({
+message: error.message,
+});
+}
 };
 
 module.exports = {
-  createRazorpayOrder,
-  verifyPayment,
+createRazorpayOrder,
+verifyPayment,
 };

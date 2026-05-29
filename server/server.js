@@ -24,6 +24,8 @@ const authRoutes = require("./routes/authRoutes");
 
 const paymentRoutes = require("./routes/paymentRoutes");
 
+const userAuthRoutes = require("./routes/userAuthRoutes");
+
 const app = express();
 
 connectDB();
@@ -32,9 +34,9 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: true,
     credentials: true,
-  }),
+  })
 );
 
 app.use(express.json());
@@ -64,7 +66,10 @@ app.use("/api/orders", orderRoutes);
 
 app.use("/api/admin", authRoutes);
 
+app.use("/api/auth", userAuthRoutes);
+
 app.use("/api/payment", paymentRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 
