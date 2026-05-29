@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-
 import api from "../api/axios";
-
 import AdminNavbar from "../components/AdminNavbar";
 
 function Orders() {
@@ -9,6 +7,12 @@ function Orders() {
 
   useEffect(() => {
     fetchOrders();
+
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchOrders = async () => {
@@ -45,32 +49,15 @@ function Orders() {
             <div key={order._id} className="bg-white rounded-3xl shadow-lg p-6">
               <div className="flex justify-between items-start flex-wrap gap-4">
                 <div>
-                  <div>
-                    <h2
-                      className="
-      text-3xl
-      font-black
-      text-orange-500
-    "
-                    >
-                      #{String(order.orderNumber).padStart(3, "0")}
-                    </h2>
+                  <h2 className="text-3xl font-black text-orange-500">
+                    #{String(order.orderNumber).padStart(3, "0")}
+                  </h2>
 
-                    <h3
-                      className="
-      text-2xl
-      font-bold
-      text-[#4b1e14]
-      mt-2
-    "
-                    >
-                      {order.customerName}
-                    </h3>
-                  </div>
+                  <h3 className="text-2xl font-bold text-[#4b1e14] mt-2">
+                    {order.userName}
+                  </h3>
 
-                  <p className="mt-2 text-gray-600">
-                    Department: {order.department}
-                  </p>
+                  <p className="mt-2 text-gray-600">Email: {order.userEmail}</p>
 
                   <p className="text-gray-600">Pickup: {order.pickupTime}</p>
 
@@ -78,22 +65,15 @@ function Orders() {
                     Payment: {order.paymentStatus}
                   </p>
 
+                  <p className="text-gray-600">Date: {order.orderDate}</p>
+
                   <p className="font-bold text-orange-500 mt-2 text-xl">
                     ₹{order.totalAmount}
                   </p>
                 </div>
 
                 <div>
-                  <span
-                    className="
-                      px-4
-                      py-2
-                      rounded-full
-                      bg-orange-100
-                      text-orange-600
-                      font-bold
-                    "
-                  >
+                  <span className="px-4 py-2 rounded-full bg-orange-100 text-orange-600 font-bold">
                     {order.status}
                   </span>
                 </div>

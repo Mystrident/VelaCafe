@@ -18,6 +18,11 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
+    orderDate: {
+      type: String,
+      required: true,
+    },
+
     pickupTime: {
       type: String,
       required: true,
@@ -26,11 +31,8 @@ const orderSchema = new mongoose.Schema(
     items: [
       {
         itemId: mongoose.Schema.Types.ObjectId,
-
         name: String,
-
         quantity: Number,
-
         price: Number,
       },
     ],
@@ -63,7 +65,7 @@ const orderSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Order", orderSchema);
