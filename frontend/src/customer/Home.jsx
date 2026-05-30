@@ -16,16 +16,23 @@ function Home() {
   const [cart, setCart] = useState({});
   const [showCheckout, setShowCheckout] = useState(false);
   const [activeOrder, setActiveOrder] = useState(null);
-  const [isFetching, setIsFetching] = useState(true); // Initial load state
+  const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
     fetchItems();
+    
+    // 🔴 THE FIX: Check both the order AND the token
     const savedOrder = localStorage.getItem("activeOrder");
-    if (savedOrder) {
+    const customerToken = localStorage.getItem("customerToken");
+
+    if (savedOrder && customerToken) {
       setActiveOrder(JSON.parse(savedOrder));
+    } else if (!customerToken && savedOrder) {
+      // If they logged out or token was removed, clean up the ghost order
+      localStorage.removeItem("activeOrder");
+      setActiveOrder(null);
     }
 
-    // 🔴 NEW: Listen for Live Stock Updates
     const socket = io(import.meta.env.VITE_API_URL.replace("/api", ""));
     socket.on("stock-updated", ({ itemId, newStock }) => {
       setItems((prevItems) =>
@@ -34,7 +41,6 @@ function Home() {
         )
       );
       
-      // Auto-remove item from user's cart if new stock is lower than their cart quantity
       setCart((prevCart) => {
         if (prevCart[itemId] > newStock) {
            return { ...prevCart, [itemId]: newStock };
@@ -57,14 +63,16 @@ function Home() {
     }
   };
 
-  // ... [KEEP increaseQty, decreaseQty, clearCart, totalAmount, totalItems logic exactly as it is] ...
   const increaseQty = (id) => {
     setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
   };
+  
   const decreaseQty = (id) => {
     setCart((prev) => ({ ...prev, [id]: prev[id] > 0 ? prev[id] - 1 : 0 }));
   };
+  
   const clearCart = () => setCart({});
+  
   const totalAmount = items.reduce((total, item) => total + item.price * (cart[item._id] || 0), 0);
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
 
@@ -100,7 +108,6 @@ function Home() {
           </div>
         </div>
 
-        {/* 🔴 NEW: Show Loader or Grid */}
         {isFetching ? (
           <Loader />
         ) : (

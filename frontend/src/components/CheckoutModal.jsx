@@ -8,6 +8,13 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
   const [loading, setLoading] = useState(false);
   const [customerToken, setCustomerToken] = useState(null);
 
+  // 🔴 NEW: Calculate the Order Summary
+  const orderSummary = items.filter((item) => cart[item._id] > 0);
+  const totalAmountToPay = orderSummary.reduce(
+    (total, item) => total + item.price * cart[item._id],
+    0
+  );
+
   useEffect(() => {
     const token = localStorage.getItem("customerToken");
     if (token) {
@@ -45,12 +52,10 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
 
       setLoading(true);
 
-      const orderedItems = items
-        .filter((item) => cart[item._id] > 0)
-        .map((item) => ({
-          itemId: item._id,
-          quantity: cart[item._id],
-        }));
+      const orderedItems = orderSummary.map((item) => ({
+        itemId: item._id,
+        quantity: cart[item._id],
+      }));
 
       const { data } = await api.post(
         "/api/payment/create-order",
@@ -100,16 +105,20 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
           } catch (error) {
             console.log(error);
 
-            if (error.response?.status === 401) {
+            const errorMsg = error.response?.data?.message;
+      
+            if (error.response?.status === 400 && errorMsg?.includes("left")) {
+              alert(errorMsg); 
+              closeModal();    
+              clearCart();     
+              window.location.reload(); 
+            } else if (error.response?.status === 401) {
               localStorage.removeItem("customerToken");
               setCustomerToken(null);
               alert("Session expired. Please login again.");
-              return;
+            } else {
+              alert(errorMsg || "Payment verification failed");
             }
-
-            alert(
-              error.response?.data?.message || "Payment verification failed",
-            );
           }
         },
         theme: { color: "#f97316" },
@@ -140,9 +149,9 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md relative z-10 border border-gray-100"
+        className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md relative z-10 border border-gray-100 max-h-[90vh] overflow-y-auto scrollbar-hide"
       >
-        <h1 className="text-3xl font-black mb-8 text-[#3a1710] tracking-tight">Checkout</h1>
+        <h1 className="text-3xl font-black mb-6 text-[#3a1710] tracking-tight">Checkout</h1>
 
         {!customerToken ? (
           <div className="flex flex-col items-center gap-4 mb-2">
@@ -154,8 +163,32 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
           </div>
         ) : (
           <>
-            <div className="mb-6 p-4 rounded-2xl bg-green-50 text-green-700 font-semibold text-sm border border-green-200/50 flex items-center justify-center">
+            <div className="mb-6 p-3 rounded-2xl bg-green-50 text-green-700 font-semibold text-sm border border-green-200/50 flex items-center justify-center">
               Student verified successfully ✓
+            </div>
+
+            {/* 🔴 NEW: Order Summary Box */}
+            <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-6">
+              <h3 className="text-[#3a1710] font-black mb-4 uppercase tracking-wider text-xs">Order Summary</h3>
+              
+              <div className="space-y-3 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                {orderSummary.map((item) => (
+                  <div key={item._id} className="flex justify-between items-center text-sm font-medium text-gray-600">
+                    <span className="truncate max-w-[200px]">
+                      {item.name} 
+                      <span className="text-orange-500 font-bold ml-2">x{cart[item._id]}</span>
+                    </span>
+                    <span className="text-[#3a1710] font-bold shrink-0">
+                      ₹{item.price * cart[item._id]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                <span className="font-bold text-gray-500 uppercase text-xs tracking-wider">Total to Pay</span>
+                <span className="text-2xl font-black text-orange-500">₹{totalAmountToPay}</span>
+              </div>
             </div>
 
             <div className="space-y-5">
@@ -164,7 +197,6 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
                   Select Exact Pickup Time
                 </label>
                 
-                {/* Clean, native time input */}
                 <input
                   type="time"
                   value={pickupTime}
@@ -179,7 +211,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
                 disabled={loading}
                 className="bg-orange-500 text-white px-5 py-4 rounded-2xl w-full font-bold text-lg hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20 disabled:opacity-50 active:scale-[0.98]"
               >
-                {loading ? "Processing..." : "Pay Securely"}
+                {loading ? "Processing..." : `Pay ₹${totalAmountToPay} Securely`}
               </button>
             </div>
           </>

@@ -117,3 +117,24 @@ p {
 html {
   scroll-behavior: smooth;
 }
+
+/* -----------------------------------------
+   AGGRESSIVE SCROLLBAR REMOVAL v2
+   ----------------------------------------- */
+
+/* 1. Target Firefox and IE/Edge globally */
+html, body, * {
+  -ms-overflow-style: none !important;  
+  scrollbar-width: none !important;  
+}
+
+/* 2. Explicitly target the root, body, and ALL elements for Chrome/Safari */
+*::-webkit-scrollbar,
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
+  -webkit-appearance: none !important;
+}
