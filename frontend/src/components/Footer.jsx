@@ -1,94 +1,64 @@
 function Footer() {
   return (
-    <footer
-      id="contact-section"
-      className="
-        bg-[#4b1e14]
-        text-white
-        mt-20
-      "
-    >
-      <div
-        className="
-          max-w-7xl
-          mx-auto
-          px-4
-          md:px-10
-          py-16
-          grid
-          md:grid-cols-2
-          gap-12
-        "
-      >
+    <footer id="contact-section" className="bg-[#2a110a] text-white mt-10 rounded-t-[3rem] shadow-[0_-20px_50px_rgb(0,0,0,0.05)]">
+      <div className="max-w-7xl mx-auto px-4 md:px-10 py-20 grid md:grid-cols-2 gap-16 items-center">
+        
         <div>
-          <h1
-            className="
-              text-4xl
-              font-black
-              mb-6
-            "
-          >
+          <h1 className="text-4xl md:text-5xl font-black mb-6 tracking-tight text-white/90">
             VELAA CAFÉ
           </h1>
-
-          <p className="text-lg text-gray-300 leading-relaxed">
-            Fresh café food, quick pickup, and smooth ordering experience for
-            students.
+          <p className="text-lg text-white/60 leading-relaxed font-medium max-w-md">
+            Fresh café food, quick pickup, and a smooth ordering experience for
+            SASTRA students.
           </p>
 
-          <div className="mt-8 space-y-4">
-            <p className="text-lg">📞 +91 89034 12927</p>
+          <div className="mt-10 space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl border border-white/10">📞</div>
+              <p className="text-lg font-bold text-white/80">+91 89034 12927</p>
+            </div>
 
-            <p className="text-lg">
-              📍 Inside SASTRA Deemed University, Thanjavur
-            </p>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl border border-white/10">📍</div>
+              <p className="text-lg font-bold text-white/80 max-w-[250px] leading-tight">
+                Inside SASTRA Deemed University, Thanjavur
+              </p>
+            </div>
 
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noreferrer"
-              className="
-                text-orange-400
-                text-lg
-                hover:text-orange-300
-              "
-            >
-              Instagram
-            </a>
+            <div className="flex items-center gap-4 pt-2">
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                className="bg-orange-500 text-white font-bold px-8 py-3.5 rounded-2xl hover:bg-orange-400 transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
+              >
+                Follow on Instagram
+              </a>
+            </div>
           </div>
         </div>
 
-        <div
-          className="
-            rounded-3xl
-            overflow-hidden
-            shadow-2xl
-            min-h-[300px]
-          "
-        >
+        <div className="rounded-[2.5rem] overflow-hidden shadow-2xl h-[350px] md:h-[400px] border-4 border-white/5 relative group">
+          {/* Subtle overlay on the map */}
+          <div className="absolute inset-0 bg-orange-500/10 pointer-events-none group-hover:bg-transparent transition-colors duration-500 z-10" />
           <iframe
             title="map"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3915.305312063882!2d76.95583247480774!3d11.088210253746288!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba859fdf6b2db2b%3A0x2b6b3e5b6f9f0b1!2sVelammal%20Engineering%20College!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin"
+            src="https://maps.google.com/maps?q=SASTRA%20Deemed%20University&t=&z=15&ie=UTF8&iwloc=&output=embed"
             width="100%"
             height="100%"
             allowFullScreen=""
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            className="border-0 w-full h-full"
+            className="border-0 w-full h-full grayscale-[20%] contrast-[1.1]"
           />
         </div>
+
       </div>
 
-      <div
-        className="
-          border-t
-          border-white/10
-          py-6
-          text-center
-          text-gray-400
-        "
-      >
-        © 2026 VELAA CAFÉ. All rights reserved.
+      <div className="border-t border-white/10 py-8 text-center">
+        <p className="text-white/40 font-semibold text-sm tracking-widest uppercase">
+          © {new Date().getFullYear()} VELAA CAFÉ. All rights reserved.
+        </p>
       </div>
     </footer>
   );

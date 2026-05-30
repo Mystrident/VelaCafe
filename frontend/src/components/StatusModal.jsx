@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import { motion, AnimatePresence } from "framer-motion";
 
 function StatusModal({
   orderId,
@@ -8,6 +9,7 @@ function StatusModal({
   onClose,
 }) {
   const [status, setStatus] = useState(initialStatus);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
     if (!orderId) return;
@@ -19,6 +21,8 @@ function StatusModal({
     socket.on("order-status-updated", (data) => {
       if (data.orderId === orderId) {
         setStatus(data.status);
+        // Automatically pop the modal open when a status update arrives
+        setIsExpanded(true);
 
         localStorage.setItem(
           "activeOrder",
@@ -39,120 +43,134 @@ function StatusModal({
   const getStatusColor = () => {
     switch (status) {
       case "Pending":
-        return "bg-yellow-100 text-yellow-700";
-
+        return "bg-yellow-50 text-yellow-600 border-yellow-200";
       case "Preparing":
-        return "bg-orange-100 text-orange-700";
-
+        return "bg-orange-50 text-orange-600 border-orange-200";
       case "Ready":
-        return "bg-blue-100 text-blue-700";
-
+        return "bg-green-50 text-green-600 border-green-200";
       case "Completed":
-        return "bg-green-100 text-green-700";
-
+        return "bg-gray-50 text-gray-600 border-gray-200";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-50 text-gray-600 border-gray-200";
+    }
+  };
+
+  const handleCloseClick = () => {
+    if (status === "Completed") {
+      onClose(); // Completely dismiss and clear local storage via Home.jsx
+    } else {
+      setIsExpanded(false); // Minimize to circle if not completed
     }
   };
 
   return (
-    <div
-      className="
-        fixed
-        bottom-5
-        right-5
-        bg-white
-        rounded-3xl
-        shadow-2xl
-        p-6
-        w-[350px]
-        z-50
-        border
-      "
-    >
-      <div className="flex justify-between items-center">
-        <h2
+    <AnimatePresence>
+      {isExpanded ? (
+        <motion.div
+          key="expanded-card"
+          initial={{ y: 50, opacity: 0, scale: 0.9 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 50, opacity: 0, scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="
-            text-2xl
-            font-black
-            text-[#4b1e14]
+            fixed
+            bottom-6
+            right-6
+            bg-white/95
+            backdrop-blur-md
+            rounded-[2rem]
+            shadow-[0_20px_50px_rgb(0,0,0,0.15)]
+            p-6
+            w-[340px]
+            z-50
+            border
+            border-white
           "
         >
-          Order #{String(orderNumber).padStart(3, "0")}
-        </h2>
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+                Live Tracking
+              </p>
+              <h2 className="text-2xl font-black text-[#3a1710]">
+                Order #{String(orderNumber).padStart(3, "0")}
+              </h2>
+            </div>
 
-        {status === "Completed" && (
-          <button
-            onClick={onClose}
-            className="
-      text-gray-400
-      hover:text-black
-    "
+            <button
+              onClick={handleCloseClick}
+              className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors font-bold"
+              title={status === "Completed" ? "Close Order" : "Minimize Tracker"}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div
+            className={`
+              flex items-center justify-center gap-3
+              px-4
+              py-4
+              rounded-2xl
+              font-bold
+              border
+              ${getStatusColor()}
+            `}
           >
-            ✕
-          </button>
-        )}
-      </div>
+            {status !== "Completed" && status !== "Ready" && (
+              <span className="w-2.5 h-2.5 rounded-full bg-current animate-pulse" />
+            )}
+            {status}
+          </div>
 
-      <div className="mt-5">
-        <p
+          {status === "Ready" && (
+            <div className="mt-4 text-center">
+              <p className="text-sm font-semibold text-green-600">
+                🔥 Your food is hot and ready!
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Please pick it up at the counter.
+              </p>
+            </div>
+          )}
+        </motion.div>
+      ) : (
+        <motion.button
+          key="minimized-circle"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          onClick={() => setIsExpanded(true)}
           className="
-            text-gray-500
-            text-sm
+            fixed
+            bottom-6
+            right-6
+            w-16
+            h-16
+            bg-white
+            rounded-full
+            shadow-[0_10px_30px_rgb(0,0,0,0.15)]
+            z-50
+            border-2
+            border-orange-500
+            flex
+            items-center
+            justify-center
+            group
+            hover:scale-105
+            transition-transform
           "
         >
-          Current Status
-        </p>
-
-        <div
-          className={`
-            mt-2
-            px-4
-            py-3
-            rounded-2xl
-            font-bold
-            text-center
-            ${getStatusColor()}
-          `}
-        >
-          {status}
-        </div>
-      </div>
-
-      {status === "Ready" && (
-        <div
-          className="
-            mt-4
-            bg-green-50
-            border
-            border-green-200
-            rounded-2xl
-            p-3
-            text-green-700
-            text-sm
-          "
-        >
-          Your order is ready for pickup.
-        </div>
+          <span className="text-2xl group-hover:animate-bounce">🍔</span>
+          {/* Active Pulse Indicator */}
+          <span className="absolute -top-1 -right-1 flex h-4 w-4">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-orange-500 border-2 border-white"></span>
+          </span>
+        </motion.button>
       )}
-
-      {status === "Completed" && (
-        <div
-          className="
-            mt-4
-            bg-blue-50
-            border
-            border-blue-200
-            rounded-2xl
-            p-3
-            text-blue-700
-            text-sm
-          "
-        >
-          Order completed successfully.
-        </div>
-      )}
-    </div>
+    </AnimatePresence>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { GoogleLogin } from "@react-oauth/google";
+import { motion } from "framer-motion";
 import api from "../api/axios";
 
 function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
@@ -38,7 +39,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
       }
 
       if (!pickupTime) {
-        alert("Please enter pickup time");
+        alert("Please select a specific pickup time");
         return;
       }
 
@@ -111,10 +112,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
             );
           }
         },
-
-        theme: {
-          color: "#f97316",
-        },
+        theme: { color: "#f97316" },
       };
 
       const razorpay = new window.Razorpay(options);
@@ -128,12 +126,27 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 px-4">
-      <div className="bg-white p-8 rounded-3xl w-full max-w-md">
-        <h1 className="text-3xl font-bold mb-6 text-[#4b1e14]">Checkout</h1>
+    <div className="fixed inset-0 z-[100] flex justify-center items-center px-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-[#2a110a]/40 backdrop-blur-sm"
+        onClick={closeModal}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md relative z-10 border border-gray-100"
+      >
+        <h1 className="text-3xl font-black mb-8 text-[#3a1710] tracking-tight">Checkout</h1>
 
         {!customerToken ? (
-          <div className="flex justify-center mb-6">
+          <div className="flex flex-col items-center gap-4 mb-2">
+            <p className="text-gray-500 font-medium text-center">Please verify your SASTRA student email to continue.</p>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => alert("Google Login Failed")}
@@ -141,35 +154,44 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
           </div>
         ) : (
           <>
-            <div className="mb-5 p-4 rounded-2xl bg-green-50 border border-green-200">
-              Logged in successfully
+            <div className="mb-6 p-4 rounded-2xl bg-green-50 text-green-700 font-semibold text-sm border border-green-200/50 flex items-center justify-center">
+              Student verified successfully ✓
             </div>
 
-            <input
-              type="text"
-              placeholder="Pickup Time"
-              value={pickupTime}
-              onChange={(e) => setPickupTime(e.target.value)}
-              className="w-full border p-4 rounded-2xl mb-5 outline-none focus:ring-2 focus:ring-orange-400"
-            />
+            <div className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide ml-2">
+                  Select Exact Pickup Time
+                </label>
+                
+                {/* Clean, native time input */}
+                <input
+                  type="time"
+                  value={pickupTime}
+                  onChange={(e) => setPickupTime(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-orange-400 focus:bg-white transition-all font-bold text-[#3a1710] text-xl cursor-pointer"
+                  required
+                />
+              </div>
 
-            <button
-              onClick={handlePayment}
-              disabled={loading}
-              className="bg-orange-500 text-white px-5 py-4 rounded-2xl w-full mt-4 font-bold text-lg hover:bg-orange-600 transition disabled:opacity-50"
-            >
-              {loading ? "Processing..." : "Pay Now"}
-            </button>
+              <button
+                onClick={handlePayment}
+                disabled={loading}
+                className="bg-orange-500 text-white px-5 py-4 rounded-2xl w-full font-bold text-lg hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20 disabled:opacity-50 active:scale-[0.98]"
+              >
+                {loading ? "Processing..." : "Pay Securely"}
+              </button>
+            </div>
           </>
         )}
 
         <button
           onClick={closeModal}
-          className="mt-4 w-full text-gray-600 hover:text-black transition"
+          className="mt-6 w-full text-gray-400 font-bold hover:text-[#3a1710] transition-colors"
         >
-          Cancel
+          Cancel Order
         </button>
-      </div>
+      </motion.div>
     </div>
   );
 }
