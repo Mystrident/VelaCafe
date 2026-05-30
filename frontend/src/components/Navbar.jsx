@@ -1,24 +1,30 @@
 import { HiMenu } from "react-icons/hi";
+import { motion } from "framer-motion";
 
 function Navbar() {
   const scrollToMenu = () => {
     const section = document.getElementById("menu-section");
-
     section.scrollIntoView({
       behavior: "smooth",
     });
   };
 
   return (
-    <div
+    <motion.div
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 100, damping: 20 }}
       className="
         fixed
         top-0
         left-0
         w-full
         z-50
-        bg-[#f8efe3]
+        bg-white/80
+        backdrop-blur-lg
         border-b
+        border-gray-200/50
+        shadow-sm
       "
     >
       <div
@@ -33,44 +39,39 @@ function Navbar() {
           items-center
         "
       >
-        <div
-          className="
-            flex
-            items-center
-            gap-3
-          "
-        >
+        <div className="flex items-center gap-3 cursor-pointer">
           <img
             src="/vela_cafe_logo.jpeg"
             alt="logo"
             className="
               w-12
               h-12
-              md:w-16
-              md:h-16
+              md:w-14
+              md:h-14
               object-cover
               rounded-full
+              shadow-sm
             "
           />
-
           <div>
             <h1
               className="
                 text-2xl
-                md:text-4xl
+                md:text-3xl
                 font-black
-                text-[#5c1f16]
+                text-[#4b1e14]
+                tracking-tight
               "
             >
               VELAA
             </h1>
-
             <p
               className="
-                text-xs
-                md:text-sm
-                tracking-[4px]
+                text-[10px]
+                md:text-xs
+                tracking-[0.3em]
                 text-[#8b5e3c]
+                font-semibold
               "
             >
               CAFÉ
@@ -83,21 +84,27 @@ function Navbar() {
             hidden
             md:flex
             items-center
-            gap-12
+            gap-10
             font-bold
-            text-[#5c1f16]
+            text-[#4b1e14]
+            text-sm
+            tracking-wide
           "
         >
-          <button onClick={scrollToMenu}>MENU</button>
-
+          <button 
+            onClick={scrollToMenu}
+            className="hover:text-orange-500 transition-colors"
+          >
+            MENU
+          </button>
           <button
             onClick={() => {
               const section = document.getElementById("contact-section");
-
               section.scrollIntoView({
                 behavior: "smooth",
               });
             }}
+            className="hover:text-orange-500 transition-colors"
           >
             CONTACT
           </button>
@@ -107,13 +114,15 @@ function Navbar() {
           className="
             md:hidden
             text-3xl
-            text-[#5c1f16]
+            text-[#4b1e14]
+            hover:text-orange-500
+            transition-colors
           "
         >
           <HiMenu />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

@@ -1,8 +1,31 @@
+import { motion } from "framer-motion";
 import FoodCard from "./FoodCard";
 
 function FoodGrid({ items, cart, increaseQty, decreaseQty }) {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 40 },
+    show: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { type: "spring", stiffness: 250, damping: 24 } 
+    },
+  };
+
   return (
-    <div
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show" // <-- Changed from whileInView="show" to fix the invisibility bug!
       className="
         grid
         grid-cols-1
@@ -12,15 +35,16 @@ function FoodGrid({ items, cart, increaseQty, decreaseQty }) {
       "
     >
       {items.map((item) => (
-        <FoodCard
-          key={item._id}
-          item={item}
-          quantity={cart[item._id] || 0}
-          increaseQty={increaseQty}
-          decreaseQty={decreaseQty}
-        />
+        <motion.div key={item._id} variants={itemVariants}>
+          <FoodCard
+            item={item}
+            quantity={cart[item._id] || 0}
+            increaseQty={increaseQty}
+            decreaseQty={decreaseQty}
+          />
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }
 

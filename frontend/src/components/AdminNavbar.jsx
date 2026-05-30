@@ -1,19 +1,28 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 
 function AdminNavbar() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const logout = () => {
     localStorage.removeItem("token");
-
     navigate("/login");
   };
 
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <div
+    <motion.div
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 100, damping: 20 }}
       className="
-        bg-white
-        shadow-md
+        bg-white/80
+        backdrop-blur-lg
+        border-b
+        border-gray-200/50
+        shadow-sm
         px-8
         py-4
         flex
@@ -24,59 +33,49 @@ function AdminNavbar() {
         z-50
       "
     >
-      <h1
-        className="
-          text-3xl
-          font-bold
-          text-orange-500
-        "
-      >
-        ADMIN PANEL
-      </h1>
+      <div className="flex items-center gap-3">
+        <h1 className="text-2xl font-black text-[#3a1710] tracking-tight">
+          ADMIN <span className="text-orange-500">PORTAL</span>
+        </h1>
+      </div>
 
-      <div
-        className="
-          flex
-          gap-6
-          items-center
-        "
-      >
+      <div className="flex gap-8 items-center">
         <Link
           to="/admin"
-          className="
-            font-semibold
-            hover:text-orange-500
-          "
+          className={`font-bold transition-colors ${
+            isActive("/admin") ? "text-orange-500" : "text-gray-500 hover:text-[#3a1710]"
+          }`}
         >
-          Add Items
+          Menu Items
         </Link>
 
         <Link
           to="/orders"
-          className="
-            font-semibold
-            hover:text-orange-500
-          "
+          className={`font-bold transition-colors ${
+            isActive("/orders") ? "text-orange-500" : "text-gray-500 hover:text-[#3a1710]"
+          }`}
         >
-          Orders
+          Live Orders
         </Link>
 
         <button
           onClick={logout}
           className="
-            bg-orange-500
-            text-white
-            px-5
-            py-2
+            bg-gray-100
+            text-[#3a1710]
+            font-bold
+            px-6
+            py-2.5
             rounded-xl
-            hover:bg-orange-600
-            transition
+            hover:bg-red-50
+            hover:text-red-600
+            transition-colors
           "
         >
           Logout
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
