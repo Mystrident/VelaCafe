@@ -38,9 +38,9 @@ function HeroCarousel() {
         </h1>
         
         <p className="text-[#8b5e3c] text-base md:text-lg font-medium max-w-lg leading-relaxed">
-          @Vela Cafe days turn into memories<br/>
+          @Velaa Cafe, days turn into memories...<br/>
           Pre-Order your favorites and experience the joy of
-          hassle-free dining at Vela Café.
+          hassle-free dining at Velaa Café.
         </p>
         
         <div className="flex flex-wrap gap-4 pt-4">
