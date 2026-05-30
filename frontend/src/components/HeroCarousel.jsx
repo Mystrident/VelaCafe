@@ -4,13 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 function HeroCarousel() {
   // 🔴 PASTE YOUR CLOUDINARY URLS HERE
   const images = [
-    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780140896/6_oig2cq.jpg", // Replace with your 1st Cloudinary URL
-    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780140896/2_thtxfn.jpg", // Replace with your 2nd Cloudinary URL
-    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780140896/1_zs8pvu.jpg",
-    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780140896/5_alh8kh.jpg",
-    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780140895/4_etnwdg.jpg",
-    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780140895/3_bciv0k.jpg",
-    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780140895/7_e3zugn.jpg", // Replace with your 3rd Cloudinary URL
+    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780155195/14_c3w7ml.jpg", // Replace with your 1st Cloudinary URL
+    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780155194/13_l3psqu.jpg", // Replace with your 2nd Cloudinary URL
+    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780155193/12_tieco3.jpg",
+    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780155193/9_ljs2dz.jpg",
+    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780154492/11_orgasb.jpg",
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -42,9 +40,8 @@ function HeroCarousel() {
         </h1>
         
         <p className="text-[#8b5e3c] text-lg md:text-xl font-medium max-w-lg leading-relaxed">
-          Cafe which turns days into memories<br></br>
-          Every bite is a celebration of flavor, crafted with love and served with a smile.<br></br>
-          Pre-Order your favorites and experience the joy of hassle-free dining at Velaa Café.
+          @Vela Cafe days turn into memories<br></br>
+          Pre-Order your favorites and experience the joy of hassle-free dining at Vela Café.
         </p>
         
         <div className="flex flex-wrap gap-4 pt-4">
