@@ -1,6 +1,7 @@
 const cron = require("node-cron");
 
 const Order = require("../models/Order");
+const Counter = require("../models/Counter");
 
 cron.schedule("0 0 * * *", async () => {
   try {
@@ -12,8 +13,14 @@ cron.schedule("0 0 * * *", async () => {
       },
     });
 
-    console.log("Old orders deleted successfully");
+    await Counter.deleteMany({
+      date: {
+        $ne: today,
+      },
+    });
+
+    console.log("Old orders and counters deleted successfully");
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 });

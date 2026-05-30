@@ -1,22 +1,6 @@
 const { body, validationResult } = require("express-validator");
 
 const validateOrder = [
-  body("customerName")
-    .trim()
-    .isLength({
-      min: 2,
-      max: 50,
-    })
-    .withMessage("Name must be 2-50 characters"),
-
-  body("department")
-    .trim()
-    .isLength({
-      min: 2,
-      max: 30,
-    })
-    .withMessage("Department must be 2-30 characters"),
-
   body("pickupTime")
     .trim()
     .isLength({

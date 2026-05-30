@@ -1,5 +1,7 @@
 const express = require("express");
 
+const customerProtect = require("../middleware/customerAuthMiddleware");
+
 const router = express.Router();
 
 const {
@@ -9,8 +11,13 @@ const {
 
 const { validateOrder } = require("../middleware/validators");
 
-router.post("/create-order", validateOrder, createRazorpayOrder);
+router.post(
+  "/create-order",
+  customerProtect,
+  validateOrder,
+  createRazorpayOrder,
+);
 
-router.post("/verify-payment", verifyPayment);
+router.post("/verify-payment", customerProtect, verifyPayment);
 
 module.exports = router;

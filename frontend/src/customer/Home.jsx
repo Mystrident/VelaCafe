@@ -14,6 +14,8 @@ import CheckoutModal from "../components/CheckoutModal";
 
 import Footer from "../components/Footer";
 
+import StatusModal from "../components/StatusModal";
+
 function Home() {
   const [items, setItems] = useState([]);
 
@@ -21,8 +23,16 @@ function Home() {
 
   const [showCheckout, setShowCheckout] = useState(false);
 
+  const [activeOrder, setActiveOrder] = useState(null);
+
   useEffect(() => {
     fetchItems();
+
+    const savedOrder = localStorage.getItem("activeOrder");
+
+    if (savedOrder) {
+      setActiveOrder(JSON.parse(savedOrder));
+    }
   }, []);
 
   const fetchItems = async () => {
@@ -170,6 +180,19 @@ function Home() {
           cart={cart}
           closeModal={() => setShowCheckout(false)}
           clearCart={clearCart}
+          onOrderPlaced={(order) => setActiveOrder(order)}
+        />
+      )}
+
+      {activeOrder && (
+        <StatusModal
+          orderId={activeOrder.orderId}
+          orderNumber={activeOrder.orderNumber}
+          initialStatus={activeOrder.status}
+          onClose={() => {
+            localStorage.removeItem("activeOrder");
+            setActiveOrder(null);
+          }}
         />
       )}
 

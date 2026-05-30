@@ -1,7 +1,5 @@
 const Admin = require("../models/Admin");
-
 const bcrypt = require("bcryptjs");
-
 const jwt = require("jsonwebtoken");
 
 const loginAdmin = async (req, res) => {
@@ -40,8 +38,11 @@ const loginAdmin = async (req, res) => {
       token,
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
-      message: error.message,
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
     });
   }
 };

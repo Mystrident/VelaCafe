@@ -2,12 +2,23 @@ const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
-    customerName: {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    userName: {
       type: String,
       required: true,
     },
 
-    department: {
+    userEmail: {
+      type: String,
+      required: true,
+    },
+
+    orderDate: {
       type: String,
       required: true,
     },
@@ -20,11 +31,8 @@ const orderSchema = new mongoose.Schema(
     items: [
       {
         itemId: mongoose.Schema.Types.ObjectId,
-
         name: String,
-
         quantity: Number,
-
         price: Number,
       },
     ],
@@ -39,24 +47,15 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
-    orderDate: {
-      type: String,
-      required: true,
-    },
-
     paymentStatus: {
       type: String,
       enum: ["PENDING", "PAID"],
       default: "PAID",
     },
 
-    razorpayOrderId: {
-      type: String,
-    },
+    razorpayOrderId: String,
 
-    razorpayPaymentId: {
-      type: String,
-    },
+    razorpayPaymentId: String,
 
     status: {
       type: String,

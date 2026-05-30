@@ -6,7 +6,12 @@ const getItems = async (req, res) => {
 
     res.json(items);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error);
+
+    res.status(500).json({
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
+    });
   }
 };
 
@@ -24,7 +29,12 @@ const addItem = async (req, res) => {
 
     res.status(201).json(item);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error);
+
+    res.status(500).json({
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
+    });
   }
 };
 
@@ -34,7 +44,12 @@ const deleteItem = async (req, res) => {
 
     res.json({ message: "Item removed" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error);
+
+    res.status(500).json({
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
+    });
   }
 };
 
@@ -42,13 +57,24 @@ const toggleAvailability = async (req, res) => {
   try {
     const item = await Item.findById(req.params.id);
 
+    if (!item) {
+      return res.status(404).json({
+        message: "Item not found",
+      });
+    }
+
     item.available = !item.available;
 
     await item.save();
 
     res.json(item);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error);
+
+    res.status(500).json({
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
+    });
   }
 };
 

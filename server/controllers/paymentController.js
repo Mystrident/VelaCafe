@@ -3,12 +3,13 @@ const crypto = require("crypto");
 const razorpay = require("../config/razorpay");
 
 const Order = require("../models/Order");
-
 const Item = require("../models/Item");
+const User = require("../models/User");
+const Counter = require("../models/Counter");
 
 const createRazorpayOrder = async (req, res) => {
   try {
-    const { customerName, department, pickupTime, items } = req.body;
+    const { pickupTime, items } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({
@@ -31,6 +32,12 @@ const createRazorpayOrder = async (req, res) => {
 
       const quantity = Number(cartItem.quantity);
 
+      if (!quantity || quantity < 1 || quantity > 50) {
+        return res.status(400).json({
+          message: "Invalid quantity",
+        });
+      }
+
       totalAmount += item.price * quantity;
 
       validatedItems.push({
@@ -41,25 +48,24 @@ const createRazorpayOrder = async (req, res) => {
       });
     }
 
-    const options = {
+    const razorpayOrder = await razorpay.orders.create({
       amount: totalAmount * 100,
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
-    };
-
-    const razorpayOrder = await razorpay.orders.create(options);
+    });
 
     res.json({
       razorpayOrder,
-      customerName,
-      department,
       pickupTime,
       validatedItems,
       totalAmount,
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
-      message: error.message,
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
     });
   }
 };
@@ -70,8 +76,6 @@ const verifyPayment = async (req, res) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      customerName,
-      department,
       pickupTime,
       items,
       totalAmount,
@@ -79,29 +83,50 @@ const verifyPayment = async (req, res) => {
 
     const generatedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest("hex");
 
-    const isAuthentic = generatedSignature === razorpay_signature;
-
-    if (!isAuthentic) {
+    if (generatedSignature !== razorpay_signature) {
       return res.status(400).json({
         message: "Payment verification failed",
       });
     }
 
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
     const today = new Date().toISOString().split("T")[0];
 
-    const todayOrders = await Order.countDocuments({
-      orderDate: today,
-    });
+    const counter = await Counter.findOneAndUpdate(
+      {
+        date: today,
+      },
+      {
+        $inc: {
+          sequence: 1,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+      },
+    );
 
-    const orderNumber = todayOrders + 1;
+    const orderNumber = counter.sequence;
 
     const order = new Order({
-      customerName,
+      userId: user._id,
 
-      department,
+      userName: user.name,
+
+      userEmail: user.email,
+
+      orderDate: today,
 
       pickupTime,
 
@@ -110,8 +135,6 @@ const verifyPayment = async (req, res) => {
       totalAmount,
 
       orderNumber,
-
-      orderDate: today,
 
       paymentStatus: "PAID",
 
@@ -124,12 +147,14 @@ const verifyPayment = async (req, res) => {
 
     res.status(201).json({
       message: "Payment successful",
-
       order,
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
-      message: error.message,
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
     });
   }
 };
