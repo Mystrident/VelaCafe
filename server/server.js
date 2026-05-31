@@ -80,6 +80,10 @@ app.get("/", (req, res) => {
   res.send("VELAA CAFE API RUNNING");
 });
 
+app.get('/api/ping', (req, res) => {
+  res.status(200).json({ message: "Server is awake and ready!" });
+});
+
 app.use("/api/items", itemRoutes);
 
 app.use("/api/orders", orderRoutes);
