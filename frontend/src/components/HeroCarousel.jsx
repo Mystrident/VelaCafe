@@ -50,12 +50,6 @@ function HeroCarousel() {
           >
             Order Now
           </button>
-          <button 
-            onClick={scrollToMenu}
-            className="bg-white text-[#3a1710] border border-gray-200 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-colors active:scale-[0.98]"
-          >
-            View Menu
-          </button>
         </div>
       </div>
 
