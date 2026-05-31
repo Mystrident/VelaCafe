@@ -8,7 +8,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
   const [loading, setLoading] = useState(false);
   const [customerToken, setCustomerToken] = useState(null);
 
-  // 🔴 NEW: Calculate the Order Summary
+  // this is for Calculate the Order Summary
   const orderSummary = items.filter((item) => cart[item._id] > 0);
   const totalAmountToPay = orderSummary.reduce(
     (total, item) => total + item.price * cart[item._id],
