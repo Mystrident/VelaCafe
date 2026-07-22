@@ -6,7 +6,7 @@ function FloatingCart({ totalAmount, totalItems, onCheckout }) {
     <AnimatePresence>
       {totalAmount > 0 && (
         <motion.div
-          initial={{ y: 100, opacity: 0, x: "-50%" }}
+          initial={{ y: 99, opacity: 0, x: "-50%" }}
           animate={{ y: 0, opacity: 1, x: "-50%" }}
           exit={{ y: 100, opacity: 0, x: "-50%" }}
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
