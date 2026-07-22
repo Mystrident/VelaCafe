@@ -1,134 +1,23 @@
-@import "tailwindcss";
+/* 1. Tailwind Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* 1. Define Local Fonts (High Performance) */
-@font-face {
-  font-family: 'VelaFont';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap; /* Ensures text stays visible while font loads */
-  src: url('/fonts/regular.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'VelaFont';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('/fonts/bold.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'VelaFont';
-  font-style: normal;
-  font-weight: 900;
-  font-display: swap;
-  src: url('/fonts/black.woff2') format('woff2');
-}
-
-/* 2. Global Variables */
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  /* Apply the custom font globally */
-  --sans: 'VelaFont', system-ui, -apple-system, sans-serif;
-  --heading: 'VelaFont', system-ui, -apple-system, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 16px/150% var(--sans);
-  letter-spacing: 0.2px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+/* 2. Global Base Styles Injection */
+@layer base {
+  html, body {
+    /* This forces the Outfit font (sans), smooths the text, and sets the background globally */
+    @apply font-sans antialiased bg-[#fdfbf7] text-[#3a1710] m-0 p-0;
+    scroll-behavior: smooth;
   }
 }
 
-body {
-  margin: 0;
-  font-family: var(--sans); /* Force Tailwind to use our local font */
-}
-
-#root {
-  max-width: 100%;
-  margin: 0 auto;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--heading);
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-
-p {
-  margin: 0;
-}
-
-/* Smooth scrolling for anchor links */
-html {
-  scroll-behavior: smooth;
-}
-
-/* -----------------------------------------
-   AGGRESSIVE SCROLLBAR REMOVAL v2
-   ----------------------------------------- */
-
-/* 1. Target Firefox and IE/Edge globally */
+/* 3. Aggressive Scrollbar Removal */
 html, body, * {
   -ms-overflow-style: none !important;  
   scrollbar-width: none !important;  
 }
 
-/* 2. Explicitly target the root, body, and ALL elements for Chrome/Safari */
 *::-webkit-scrollbar,
 html::-webkit-scrollbar,
 body::-webkit-scrollbar {

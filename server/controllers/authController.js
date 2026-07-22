@@ -6,6 +6,12 @@ const loginAdmin = async (req, res) => {
   try {
     const { username, password } = req.body;
 
+    if (typeof username !== "string" || typeof password !== "string") {
+      return res.status(400).json({
+        message: "Invalid Credentials",
+      });
+    }
+
     const admin = await Admin.findOne({
       username,
     });
@@ -27,10 +33,11 @@ const loginAdmin = async (req, res) => {
     const token = jwt.sign(
       {
         id: admin._id,
+        role: "admin",
       },
       process.env.JWT_SECRET,
       {
-        expiresIn: "7d",
+        expiresIn: "1d",
       },
     );
 

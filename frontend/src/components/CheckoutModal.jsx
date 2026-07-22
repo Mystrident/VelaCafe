@@ -3,12 +3,22 @@ import { GoogleLogin } from "@react-oauth/google";
 import { motion } from "framer-motion";
 import api from "../api/axios";
 
+// Utility function to load the Razorpay script dynamically
+const loadRazorpayScript = (src) => {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
   const [pickupTime, setPickupTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [customerToken, setCustomerToken] = useState(null);
 
-  // this is for Calculate the Order Summary
   const orderSummary = items.filter((item) => cart[item._id] > 0);
   const totalAmountToPay = orderSummary.reduce(
     (total, item) => total + item.price * cart[item._id],
@@ -38,7 +48,6 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
   const handlePayment = async () => {
     try {
       const token = localStorage.getItem("customerToken");
-
       if (!token) {
         alert("Please login with Google");
         setCustomerToken(null);
@@ -50,7 +59,21 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
         return;
       }
 
+      // NEW: Strict frontend validation for time bounds
+      if (pickupTime < "08:45" || pickupTime > "18:00") {
+        alert("Sorry, pickup times are only available between 08:45 AM and 06:00 PM.");
+        return;
+      }
+
       setLoading(true);
+
+      // Load Razorpay script securely before opening the modal
+      const res = await loadRazorpayScript("https://checkout.razorpay.com/v1/checkout.js");
+      if (!res) {
+        alert("Razorpay SDK failed to load. Are you online?");
+        setLoading(false);
+        return;
+      }
 
       const orderedItems = orderSummary.map((item) => ({
         itemId: item._id,
@@ -63,7 +86,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      const { razorpayOrder, validatedItems, totalAmount } = data;
+      const { razorpayOrder } = data;
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -72,7 +95,6 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
         name: "VELAA CAFE",
         description: "Food Order Payment",
         order_id: razorpayOrder.id,
-
         handler: async function (response) {
           try {
             const verifyRes = await api.post(
@@ -81,9 +103,6 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                pickupTime,
-                items: validatedItems,
-                totalAmount,
               },
               {
                 headers: {
@@ -104,14 +123,13 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
             closeModal();
           } catch (error) {
             console.log(error);
-
             const errorMsg = error.response?.data?.message;
-      
+
             if (error.response?.status === 400 && errorMsg?.includes("left")) {
-              alert(errorMsg); 
-              closeModal();    
-              clearCart();     
-              window.location.reload(); 
+              alert(errorMsg);
+              closeModal();
+              clearCart();
+              window.location.reload();
             } else if (error.response?.status === 401) {
               localStorage.removeItem("customerToken");
               setCustomerToken(null);
@@ -128,7 +146,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
       razorpay.open();
     } catch (error) {
       console.log(error);
-      alert(error.response?.data?.message || "Something went wrong");
+      alert(error.response?.data?.message || error.response?.data?.errors?.[0]?.msg || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -155,7 +173,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
 
         {!customerToken ? (
           <div className="flex flex-col items-center gap-4 mb-2">
-            <p className="text-gray-500 font-medium text-center">Please verify your SASTRA student email to continue.</p>
+            <p className="text-gray-500 font-medium text-center">Please verify your student email to continue.</p>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => alert("Google Login Failed")}
@@ -164,18 +182,16 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
         ) : (
           <>
             <div className="mb-6 p-3 rounded-2xl bg-green-50 text-green-700 font-semibold text-sm border border-green-200/50 flex items-center justify-center">
-              Student verified successfully ✓
+              Student verified successfully
             </div>
 
-            {/* 🔴 NEW: Order Summary Box */}
             <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-6">
               <h3 className="text-[#3a1710] font-black mb-4 uppercase tracking-wider text-xs">Order Summary</h3>
-              
               <div className="space-y-3 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                 {orderSummary.map((item) => (
                   <div key={item._id} className="flex justify-between items-center text-sm font-medium text-gray-600">
                     <span className="truncate max-w-[200px]">
-                      {item.name} 
+                      {item.name}
                       <span className="text-orange-500 font-bold ml-2">x{cart[item._id]}</span>
                     </span>
                     <span className="text-[#3a1710] font-bold shrink-0">
@@ -184,7 +200,6 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
                   </div>
                 ))}
               </div>
-
               <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
                 <span className="font-bold text-gray-500 uppercase text-xs tracking-wider">Total to Pay</span>
                 <span className="text-2xl font-black text-orange-500">₹{totalAmountToPay}</span>
@@ -194,11 +209,12 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
             <div className="space-y-5">
               <div>
                 <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide ml-2">
-                  Select Exact Pickup Time
+                  Select Exact Pickup Time (08:45 AM - 06:00 PM)
                 </label>
-                
                 <input
                   type="time"
+                  min="08:45"
+                  max="18:00"
                   value={pickupTime}
                   onChange={(e) => setPickupTime(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-orange-400 focus:bg-white transition-all font-bold text-[#3a1710] text-xl cursor-pointer"

@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const Admin = require("../models/Admin");
 
-const protect = (req, res, next) => {
+const protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -14,7 +15,23 @@ const protect = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.admin = decoded;
+    // Only tokens explicitly issued for admins are accepted here.
+    // (Customer tokens carry role "customer" and must never pass.)
+    if (decoded.role !== "admin") {
+      return res.status(403).json({
+        message: "Admin access only",
+      });
+    }
+
+    const admin = await Admin.findById(decoded.id).select("_id");
+
+    if (!admin) {
+      return res.status(401).json({
+        message: "Admin no longer exists",
+      });
+    }
+
+    req.admin = { id: admin._id };
 
     next();
   } catch (error) {

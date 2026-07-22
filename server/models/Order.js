@@ -49,11 +49,15 @@ const orderSchema = new mongoose.Schema(
 
     paymentStatus: {
       type: String,
-      enum: ["PENDING", "PAID"],
+      enum: ["PENDING", "PAID", "REFUND_REQUIRED"],
       default: "PAID",
     },
 
-    razorpayOrderId: String,
+    razorpayOrderId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
 
     razorpayPaymentId: String,
 

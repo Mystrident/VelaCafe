@@ -16,10 +16,12 @@ const addItem = async (req, res) => {
   try {
     const { name, price, stock } = req.body;
 
+    const safeStock = Math.max(0, Math.floor(Number(stock) || 0));
+
     const item = new Item({
       name,
       price,
-      stock: Number(stock) || 0,
+      stock: Math.min(safeStock, 10000),
       image: req.file ? req.file.path : "",
     });
 
@@ -54,7 +56,8 @@ const updateStock = async (req, res) => {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    item.stock = Number(stock) || 0;
+    const safeStock = Math.max(0, Math.floor(Number(stock) || 0));
+    item.stock = Math.min(safeStock, 10000);
     await item.save();
     
     // 🔴 NEW: Broadcast the stock change to all connected customers instantly!

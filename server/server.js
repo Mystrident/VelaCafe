@@ -38,6 +38,11 @@ io.on("connection", (socket) => {
   console.log("Socket Connected:", socket.id);
 
   socket.on("join-order", (orderId) => {
+    // Only allow joining rooms that look like real order ids
+    if (typeof orderId !== "string" || !/^[a-f\d]{24}$/i.test(orderId)) {
+      return;
+    }
+
     socket.join(orderId);
 
     console.log(`Socket ${socket.id} joined order ${orderId}`);
@@ -50,6 +55,12 @@ io.on("connection", (socket) => {
 
 connectDB();
 
+// Required when deployed behind a reverse proxy (Render, Railway, etc.)
+// so rate limiting sees the real client IP instead of the proxy's.
+app.set("trust proxy", 1);
+
+app.disable("x-powered-by");
+
 app.use(helmet());
 
 app.use(
@@ -59,7 +70,7 @@ app.use(
   }),
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "50kb" }));
 
 app.use((req, res, next) => {
   req.body = mongoSanitize(req.body);
@@ -75,6 +86,16 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
+
+// Stricter limit on login endpoints to slow down brute-force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: "Too many login attempts. Please try again later.",
+});
+
+app.use("/api/admin/login", authLimiter);
+app.use("/api/auth/google", authLimiter);
 
 app.get("/", (req, res) => {
   res.send("VELAA CAFE API RUNNING");
