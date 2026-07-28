@@ -94,8 +94,8 @@ app.use(limiter);
  // message: "Too many login attempts. Please try again later.",
 //});
 
-app.use("/api/admin/login");
-app.use("/api/auth/google");
+//app.use("/api/admin/login");
+//app.use("/api/auth/google");
 
 app.get("/", (req, res) => {
   res.send("VELAA CAFE API RUNNING");
