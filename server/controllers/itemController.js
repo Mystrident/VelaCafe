@@ -11,6 +11,75 @@ const getItems = async (req, res) => {
     });
   }
 };
+const migrateAndCleanItems = async (req, res) => {
+  try {
+    const items = await Item.find();
+    
+    // --- PART 1: REMOVE DUPLICATES ---
+    const seenNames = new Set();
+    let deletedCount = 0;
+    
+    for (const item of items) {
+      const normalizedName = item.name.toLowerCase().trim();
+      if (seenNames.has(normalizedName)) {
+        await Item.findByIdAndDelete(item._id);
+        deletedCount++;
+      } else {
+        seenNames.add(normalizedName);
+      }
+    }
+
+    // --- PART 2: GRANULAR CATEGORIZATION ---
+    const cleanedItems = await Item.find();
+    let updatedCount = 0;
+
+    for (let item of cleanedItems) {
+      const lower = item.name.toLowerCase();
+      let newCategory = "Uncategorized";
+
+      if (lower.match(/milk|tea|coffee|lassi|drink/)) {
+        newCategory = "Beverages";
+      } else if (lower.includes("puff")) {
+        newCategory = "Puffs";
+      } else if (lower.includes("roll")) {
+        newCategory = "Rolls";
+      } else if (lower.match(/vadai|vada/)) {
+        newCategory = "Vadai";
+      } else if (lower.match(/bajji|baji/)) {
+        newCategory = "Bajjis";
+      } else if (lower.match(/paneer|panner/)) { // Catches the 'panner' typo from the DB
+        newCategory = "Paneer";
+      } else if (lower.match(/pizza|burger|parotta/)) {
+        newCategory = "Pizza & Burgers";
+      } else if (lower.match(/chips|cutlet|samosa/)) {
+        newCategory = "Chips & Cutlets";
+      } else if (lower.match(/cake|brownie|tiramisu|mousse|tresleches|bombolini|bread|rusk|bun|sweet|doughnut|choco lava|ladoo/)) {
+        newCategory = "Bakery & Desserts";
+      } else if (lower.match(/sprouts|legumes|salad/)) {
+        newCategory = "Healthy & Groceries";
+      } else if (lower.match(/muruku|suliyam|athirasam|kolukataii/)) {
+        newCategory = "Traditional Snacks";
+      }
+
+      if (item.category !== newCategory) {
+        item.category = newCategory;
+        await item.save();
+        updatedCount++;
+      }
+    }
+
+    res.json({ 
+      message: "Database optimization complete!",
+      duplicatesRemoved: deletedCount,
+      itemsCategorized: updatedCount 
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Migration failed" });
+  }
+};
+
+
 
 const addItem = async (req, res) => {
   try {
@@ -95,4 +164,4 @@ const toggleAvailability = async (req, res) => {
   }
 };
 
-module.exports = { getItems, addItem, deleteItem, updateStock, toggleAvailability };
+module.exports = { getItems, addItem, deleteItem, updateStock, toggleAvailability,migrateAndCleanItems};

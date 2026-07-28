@@ -9,6 +9,7 @@ const itemSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  category: { type: String, default: "Uncategorized"},
   image: {
     type: String,
   },
