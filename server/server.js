@@ -85,7 +85,7 @@ app.use(hpp());
  // message: "Too many requests. Please try again later.",
 //});
 
-app.use(limiter);
+//app.use(limiter);
 
 // Stricter limit on login endpoints to slow down brute-force attacks
 //const authLimiter = rateLimit({
