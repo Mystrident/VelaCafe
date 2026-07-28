@@ -22,14 +22,14 @@ const googleLogin = async (req, res) => {
     const { sub, email, name } = payload;
 
     // UPDATE: Allows 9-digit @sastra.ac.in OR any @sastra.edu email
-    //const isAcIn = /^\d{9}@sastra\.ac\.in$/i.test(email);
-    //const isEdu = email.toLowerCase().endsWith("@sastra.edu");
+    const isAcIn = /^\d{9}@sastra\.ac\.in$/i.test(email);
+    const isEdu = email.toLowerCase().endsWith("@sastra.edu");
 
-    //if (!isAcIn && !isEdu) {
-    //  return res.status(403).json({
-    //    message: "Only valid SASTRA email accounts are allowed",
-    //  });
-    //}
+    if (!isAcIn && !isEdu) {
+      return res.status(403).json({
+        message: "Only valid SASTRA email accounts are allowed",
+      });
+    }
 
     let user = await User.findOne({ email });
     if (!user) {
