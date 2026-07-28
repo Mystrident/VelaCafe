@@ -88,11 +88,11 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Stricter limit on login endpoints to slow down brute-force attacks
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: "Too many login attempts. Please try again later.",
-});
+//const authLimiter = rateLimit({
+//  windowMs: 15 * 60 * 1000,
+ // max: 10,
+ // message: "Too many login attempts. Please try again later.",
+//});
 
 app.use("/api/admin/login", authLimiter);
 app.use("/api/auth/google", authLimiter);

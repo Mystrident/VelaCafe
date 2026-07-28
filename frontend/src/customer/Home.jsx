@@ -21,19 +21,40 @@ function Home() {
 
   // Search and Multi-Filter State
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilters, setActiveFilters] = useState([]); // Array to hold multiple active filters
+  const [activeFilters, setActiveFilters] = useState([]); 
 
-  // 🔴 SMART CATEGORIZATION: Auto-groups items based on their names
-  const getCategory = (name) => {
-    const lower = name.toLowerCase();
-    if (lower.includes("puff")) return "Puffs";
-    if (lower.includes("roll")) return "Rolls";
-    if (lower.includes("cake") || lower.includes("brownie") || lower.includes("sweet")) return "Desserts";
-    return "Beverages & Others"; // Fallback for Dosa, Coffee, etc.
+// Replace your existing availableFilters array
+  const availableFilters = [
+    "Available Only", 
+    "Beverages", 
+    "Puffs", 
+    "Rolls", 
+    "Vadai", 
+    "Bajjis", 
+    "Pizza & Burgers", 
+    "Chips & Cutlets", 
+    "Bakery & Desserts", 
+    "Paneer", 
+    "Healthy & Groceries",
+    "Traditional Snacks"
+  ];
+
+  // Replace your existing categoryIcons object
+  const categoryIcons = {
+    "Beverages": "🍹",
+    "Puffs": "🥐",
+    "Rolls": "🌯",
+    "Vadai": "🧆",
+    "Bajjis": "🥟",
+    "Pizza & Burgers": "🍕",
+    "Chips & Cutlets": "🍟",
+    "Bakery & Desserts": "🍰",
+    "Paneer": "🧀",
+    "Healthy & Groceries": "🥗",
+    "Traditional Snacks": "🥮",
+    "Uncategorized": "🍽️"
   };
-
-  const availableFilters = ["Available Only", "Puffs", "Rolls", "Desserts", "Beverages & Others"];
-
+  
   useEffect(() => {
     fetchItems();
     
@@ -98,7 +119,6 @@ function Home() {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     
     let matchesFilter = true;
-    const itemCategory = getCategory(item.name);
 
     // Filter: Available Only
     if (activeFilters.includes("Available Only") && item.stock === 0) {
@@ -107,6 +127,8 @@ function Home() {
 
     // Filter: Specific Categories (If category filters are selected, it must match one)
     const categoryFilters = activeFilters.filter(f => f !== "Available Only");
+    const itemCategory = item.category || "Uncategorized"; // Safely grab category from DB
+    
     if (categoryFilters.length > 0 && !categoryFilters.includes(itemCategory)) {
       matchesFilter = false;
     }
@@ -114,21 +136,13 @@ function Home() {
     return matchesSearch && matchesFilter;
   });
 
-  // 2. Group the remaining items by category for rendering
+  // 2. Group the remaining items by database category for rendering
   const groupedItems = filteredItems.reduce((acc, item) => {
-    const cat = getCategory(item.name);
+    const cat = item.category || "Uncategorized";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(item);
     return acc;
   }, {});
-
-  // Icons for categories
-  const categoryIcons = {
-    "Puffs": "🥐",
-    "Rolls": "🌯",
-    "Desserts": "🍰",
-    "Beverages & Others": "☕"
-  };
 
   return (
     <motion.div
@@ -153,7 +167,7 @@ function Home() {
           </div>
         </div>
 
-        {/* 🔴 NEW: Search & Scrollable Filter Chips */}
+        {/* Search & Scrollable Filter Chips */}
         <div className="mb-12 sticky top-20 z-40 bg-[#fdfbf7]/90 backdrop-blur-md py-4 -mx-4 px-4 md:mx-0 md:px-0">
           
           {/* Search Bar */}
@@ -171,7 +185,7 @@ function Home() {
             )}
           </div>
 
-          {/* Scrollable Filter Chips (Zomato/Swiggy Style) */}
+          {/* Scrollable Filter Chips */}
           <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-2">
             <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-xl text-gray-500 shrink-0">
               <HiOutlineAdjustments className="text-lg" />
@@ -199,11 +213,12 @@ function Home() {
           </div>
         </div>
 
-        {/* 🔴 NEW: Categorized Rendering */}
+        {/* Categorized Rendering */}
         {isFetching ? (
           <Loader />
         ) : filteredItems.length > 0 ? (
           <div className="space-y-16">
+            {/* Map over the keys of groupedItems directly to handle any dynamic categories */}
             {Object.keys(categoryIcons).map((category) => {
               const itemsInCategory = groupedItems[category];
               

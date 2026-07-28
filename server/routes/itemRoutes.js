@@ -6,6 +6,7 @@ const {
   deleteItem,
   updateStock, // Import the new function
   toggleAvailability,
+  migrateAndCleanItems
 } = require("../controllers/itemController");
 const upload = require("../middleware/upload");
 const protect = require("../middleware/authMiddleware");
@@ -16,5 +17,6 @@ router.post("/", protect, upload.single("image"), validateItem, addItem);
 router.delete("/:id", protect, validateObjectId, deleteItem);
 router.patch("/:id/stock", protect, validateObjectId, updateStock); // New Route for updating stock
 router.patch("/:id", protect, validateObjectId, toggleAvailability);
+router.post("/optimize-db", protect, migrateAndCleanItems);
 
 module.exports = router;
