@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 require("./jobs/deleteOldOrders");
+const { attachIo: attachIoToReservationJob } = require("./jobs/releaseExpiredReservations");
 
 const express = require("express");
 const http = require("http");
@@ -33,6 +34,7 @@ const io = new Server(server, {
 });
 
 app.set("io", io);
+attachIoToReservationJob(io);
 
 io.on("connection", (socket) => {
   console.log("Socket Connected:", socket.id);
