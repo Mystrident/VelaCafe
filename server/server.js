@@ -79,23 +79,23 @@ app.use((req, res, next) => {
 
 app.use(hpp());
 
-//const limiter = rateLimit({
-//  windowMs: 15 * 60 * 1000,
-//  max: 100,
- // message: "Too many requests. Please try again later.",
-//});
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+ message: "Too many requests. Please try again later.",
+});
 
-//app.use(limiter);
+app.use(limiter);
 
 // Stricter limit on login endpoints to slow down brute-force attacks
-//const authLimiter = rateLimit({
-//  windowMs: 15 * 60 * 1000,
- // max: 10,
- // message: "Too many login attempts. Please try again later.",
-//});
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+ max: 10,
+  message: "Too many login attempts. Please try again later.",
+});
 
-//app.use("/api/admin/login");
-//app.use("/api/auth/google");
+app.use("/api/admin/login",authLimiter);
+app.use("/api/auth/google",authLimiter);
 
 app.get("/", (req, res) => {
   res.send("VELAA CAFE API RUNNING");
