@@ -81,7 +81,7 @@ app.use(hpp());
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 5000,
  message: "Too many requests. Please try again later.",
 });
 
@@ -90,7 +90,7 @@ app.use(limiter);
 // Stricter limit on login endpoints to slow down brute-force attacks
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
- max: 10,
+ max: 5000,
   message: "Too many login attempts. Please try again later.",
 });
 
