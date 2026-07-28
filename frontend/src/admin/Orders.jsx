@@ -17,7 +17,11 @@ function Orders() {
   const fetchOrders = async () => {
     try {
       const res = await api.get("/api/orders");
-      setOrders(res.data);
+
+console.log(res.data);
+console.log(Array.isArray(res.data));
+
+setOrders(res.data);
     } catch (error) {
       console.log(error);
     }
