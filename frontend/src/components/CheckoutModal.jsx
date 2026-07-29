@@ -14,6 +14,24 @@ const loadRazorpayScript = (src) => {
   });
 };
 
+// A token existing in localStorage doesn't mean it's still valid — JWTs
+// carry their own expiry (`exp`, in seconds since epoch) inside the
+// payload. Decode just that claim client-side (no network call, no new
+// dependency) so we don't show "Student verified" for a token that's
+// actually 8 days old and will be rejected the moment it hits the server.
+const isTokenExpired = (token) => {
+  try {
+    const payloadBase64 = token.split(".")[1];
+    const payload = JSON.parse(atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/")));
+    if (!payload.exp) return false;
+    return Date.now() >= payload.exp * 1000;
+  } catch {
+    // Malformed token — treat as expired/invalid so the user is asked to
+    // log in again instead of silently getting stuck later.
+    return true;
+  }
+};
+
 function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
   const [pickupTime, setPickupTime] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,8 +45,11 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
 
   useEffect(() => {
     const token = localStorage.getItem("customerToken");
-    if (token) {
+    if (token && !isTokenExpired(token)) {
       setCustomerToken(token);
+    } else if (token) {
+      // Token exists but is expired — don't show "Student verified" for it.
+      localStorage.removeItem("customerToken");
     }
   }, []);
 
@@ -68,8 +89,8 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
       setLoading(true);
 
       // Load Razorpay script securely before opening the modal
-      const res = await loadRazorpayScript("https://checkout.razorpay.com/v1/checkout.js");
-      if (!res) {
+      const scriptLoaded = await loadRazorpayScript("https://checkout.razorpay.com/v1/checkout.js");
+      if (!scriptLoaded) {
         alert("Razorpay SDK failed to load. Are you online?");
         setLoading(false);
         return;
@@ -80,11 +101,27 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
         quantity: cart[item._id],
       }));
 
-      const { data } = await api.post(
-        "/api/payment/create-order",
-        { pickupTime, items: orderedItems },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      let data;
+      try {
+        const res = await api.post(
+          "/api/payment/create-order",
+          { pickupTime, items: orderedItems },
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        data = res.data;
+      } catch (error) {
+        if (error.response?.status === 401) {
+          // Covers both an expired token that slipped past the mount-time
+          // check (e.g. it expired mid-session) and a token rejected for
+          // any other reason — either way, stop showing "verified" for it.
+          localStorage.removeItem("customerToken");
+          setCustomerToken(null);
+          alert(error.response?.data?.message || "Session expired. Please login again.");
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
       const { razorpayOrder } = data;
 
@@ -133,7 +170,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
             } else if (error.response?.status === 401) {
               localStorage.removeItem("customerToken");
               setCustomerToken(null);
-              alert("Session expired. Please login again.");
+              alert(errorMsg || "Session expired. Please login again.");
             } else {
               alert(errorMsg || "Payment verification failed");
             }
