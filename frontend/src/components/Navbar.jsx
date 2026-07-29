@@ -54,7 +54,7 @@ function Navbar() {
             </div>
           )}
         </div>
-        <button className="md:hidden text-3xl text-[#4b1e14] hover:text-orange-500 transition-colors"><HiMenu /></button>
+       
       </div>
     </motion.div>
   );
