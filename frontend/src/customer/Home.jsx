@@ -16,7 +16,7 @@ function Home() {
   const [items, setItems] = useState([]);
   const [cart, setCart] = useState({});
   const [showCheckout, setShowCheckout] = useState(false);
-  const [activeOrder, setActiveOrder] = useState(null);
+  const [activeOrders, setActiveOrders] = useState([]);
   const [isFetching, setIsFetching] = useState(true);
 
   // Search and Multi-Filter State
@@ -58,14 +58,26 @@ function Home() {
   useEffect(() => {
     fetchItems();
     
-    const savedOrder = localStorage.getItem("activeOrder");
     const customerToken = localStorage.getItem("customerToken");
 
-    if (savedOrder && customerToken) {
-      setActiveOrder(JSON.parse(savedOrder));
-    } else if (!customerToken && savedOrder) {
+    if (!customerToken) {
+      localStorage.removeItem("activeOrders");
       localStorage.removeItem("activeOrder");
-      setActiveOrder(null);
+    } else {
+      const savedOrders = localStorage.getItem("activeOrders");
+      if (savedOrders) {
+        setActiveOrders(JSON.parse(savedOrders));
+      } else {
+        // Migrate anyone still holding the old single-order key so they
+        // don't lose track of an order already in progress.
+        const legacySavedOrder = localStorage.getItem("activeOrder");
+        if (legacySavedOrder) {
+          const migrated = [JSON.parse(legacySavedOrder)];
+          localStorage.setItem("activeOrders", JSON.stringify(migrated));
+          localStorage.removeItem("activeOrder");
+          setActiveOrders(migrated);
+        }
+      }
     }
 
     const socket = io(import.meta.env.VITE_API_URL.replace("/api", ""));
@@ -101,6 +113,33 @@ function Home() {
   const increaseQty = (id) => setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
   const decreaseQty = (id) => setCart((prev) => ({ ...prev, [id]: prev[id] > 0 ? prev[id] - 1 : 0 }));
   const clearCart = () => setCart({});
+
+  // A customer can have several orders in flight at once (e.g. one already
+  // on its way, then they order again) — every one of them should keep
+  // showing a tracker until the admin marks it "Completed".
+  const addActiveOrder = (order) => {
+    setActiveOrders((prev) => {
+      const next = [...prev, order];
+      localStorage.setItem("activeOrders", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const updateActiveOrderStatus = (orderId, status) => {
+    setActiveOrders((prev) => {
+      const next = prev.map((o) => (o.orderId === orderId ? { ...o, status } : o));
+      localStorage.setItem("activeOrders", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const removeActiveOrder = (orderId) => {
+    setActiveOrders((prev) => {
+      const next = prev.filter((o) => o.orderId !== orderId);
+      localStorage.setItem("activeOrders", JSON.stringify(next));
+      return next;
+    });
+  };
   
   const totalAmount = items.reduce((total, item) => total + item.price * (cart[item._id] || 0), 0);
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
@@ -269,11 +308,22 @@ function Home() {
       <FloatingCart totalAmount={totalAmount} totalItems={totalItems} onCheckout={() => setShowCheckout(true)} />
 
       {showCheckout && (
-        <CheckoutModal items={items} cart={cart} closeModal={() => setShowCheckout(false)} clearCart={clearCart} onOrderPlaced={(order) => setActiveOrder(order)} />
+        <CheckoutModal items={items} cart={cart} closeModal={() => setShowCheckout(false)} clearCart={clearCart} onOrderPlaced={(order) => addActiveOrder(order)} />
       )}
 
-      {activeOrder && (
-        <StatusModal orderId={activeOrder.orderId} orderNumber={activeOrder.orderNumber} initialStatus={activeOrder.status} onClose={() => { localStorage.removeItem("activeOrder"); setActiveOrder(null); }} />
+      {activeOrders.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col-reverse items-end gap-4">
+          {activeOrders.map((order) => (
+            <StatusModal
+              key={order.orderId}
+              orderId={order.orderId}
+              orderNumber={order.orderNumber}
+              initialStatus={order.status}
+              onStatusChange={(status) => updateActiveOrderStatus(order.orderId, status)}
+              onClose={() => removeActiveOrder(order.orderId)}
+            />
+          ))}
+        </div>
       )}
 
       <Footer />
