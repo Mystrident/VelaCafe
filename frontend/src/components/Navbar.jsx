@@ -1,4 +1,4 @@
-import { HiMenu, HiOutlineLogout } from "react-icons/hi";
+import { HiMenu } from "react-icons/hi";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 
@@ -59,10 +59,12 @@ function Navbar() {
             <button
               onClick={handleLogout}
               aria-label="Sign Out"
-              className="flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 text-[#4b1e14] hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm text-xl"
+              className="flex items-center justify-center w-20 h-10 rounded-xl bg-gray-100 text-[#4b1e14] hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm text-xl"
             >
-              <HiOutlineLogout />
+              Signout
+              
             </button>
+      
           )}
           <button className="text-3xl text-[#4b1e14] hover:text-orange-500 transition-colors"><HiMenu /></button>
         </div>
