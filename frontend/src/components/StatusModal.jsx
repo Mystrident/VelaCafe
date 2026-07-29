@@ -6,6 +6,7 @@ function StatusModal({
   orderId,
   orderNumber,
   initialStatus = "Pending",
+  onStatusChange,
   onClose,
 }) {
   const [status, setStatus] = useState(initialStatus);
@@ -23,15 +24,7 @@ function StatusModal({
         setStatus(data.status);
         // Automatically pop the modal open when a status update arrives
         setIsExpanded(true);
-
-        localStorage.setItem(
-          "activeOrder",
-          JSON.stringify({
-            orderId,
-            orderNumber,
-            status: data.status,
-          }),
-        );
+        onStatusChange?.(data.status);
       }
     });
 
@@ -73,16 +66,12 @@ function StatusModal({
           exit={{ y: 50, opacity: 0, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="
-            fixed
-            bottom-6
-            right-6
             bg-white/95
             backdrop-blur-md
             rounded-[2rem]
             shadow-[0_20px_50px_rgb(0,0,0,0.15)]
             p-6
             w-[340px]
-            z-50
             border
             border-white
           "
@@ -126,7 +115,7 @@ function StatusModal({
           {status === "Ready" && (
             <div className="mt-4 text-center">
               <p className="text-sm font-semibold text-green-600">
-                🔥 Your food is hot and ready!
+                 Your food is hot and ready!
               </p>
               <p className="text-xs text-gray-500 mt-1">
                 Please pick it up at the counter.
@@ -143,15 +132,12 @@ function StatusModal({
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           onClick={() => setIsExpanded(true)}
           className="
-            fixed
-            bottom-6
-            right-6
+            relative
             w-16
             h-16
             bg-white
             rounded-full
             shadow-[0_10px_30px_rgb(0,0,0,0.15)]
-            z-50
             border-2
             border-orange-500
             flex
