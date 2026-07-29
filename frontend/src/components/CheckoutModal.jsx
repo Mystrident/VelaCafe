@@ -81,8 +81,8 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
       }
 
       // NEW: Strict frontend validation for time bounds
-      if (pickupTime < "08:45" || pickupTime > "18:00") {
-        alert("Sorry, pickup times are only available between 08:45 AM and 06:00 PM.");
+      if (pickupTime < "08:45" || pickupTime > "17:30") {
+        alert("Sorry, pickup times are only available between 08:45 AM and 05:00 PM.");
         return;
       }
 
@@ -154,7 +154,6 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
               status: verifyRes.data.order.status,
             };
 
-            localStorage.setItem("activeOrder", JSON.stringify(orderData));
             clearCart();
             onOrderPlaced(orderData);
             closeModal();
