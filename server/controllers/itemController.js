@@ -7,18 +7,19 @@ const getItems = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: process.env.NODE_ENV === "development" ? error.message : "Server error",
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
     });
   }
 };
 const migrateAndCleanItems = async (req, res) => {
   try {
     const items = await Item.find();
-    
+
     // --- PART 1: REMOVE DUPLICATES ---
     const seenNames = new Set();
     let deletedCount = 0;
-    
+
     for (const item of items) {
       const normalizedName = item.name.toLowerCase().trim();
       if (seenNames.has(normalizedName)) {
@@ -47,13 +48,18 @@ const migrateAndCleanItems = async (req, res) => {
         newCategory = "Vadai";
       } else if (lower.match(/bajji|baji/)) {
         newCategory = "Bajjis";
-      } else if (lower.match(/paneer|panner/)) { // Catches the 'panner' typo from the DB
+      } else if (lower.match(/paneer|panner/)) {
+        // Catches the 'panner' typo from the DB
         newCategory = "Paneer";
       } else if (lower.match(/pizza|burger|parotta/)) {
         newCategory = "Pizza & Burgers";
       } else if (lower.match(/chips|cutlet|samosa/)) {
         newCategory = "Chips & Cutlets";
-      } else if (lower.match(/cake|brownie|tiramisu|mousse|tresleches|bombolini|bread|rusk|bun|sweet|doughnut|choco lava|ladoo/)) {
+      } else if (
+        lower.match(
+          /cake|brownie|tiramisu|mousse|tresleches|bombolini|bread|rusk|bun|sweet|doughnut|choco lava|ladoo/,
+        )
+      ) {
         newCategory = "Bakery & Desserts";
       } else if (lower.match(/sprouts|legumes|salad/)) {
         newCategory = "Healthy & Groceries";
@@ -68,10 +74,10 @@ const migrateAndCleanItems = async (req, res) => {
       }
     }
 
-    res.json({ 
+    res.json({
       message: "Database optimization complete!",
       duplicatesRemoved: deletedCount,
-      itemsCategorized: updatedCount 
+      itemsCategorized: updatedCount,
     });
   } catch (error) {
     console.error(error);
@@ -79,17 +85,16 @@ const migrateAndCleanItems = async (req, res) => {
   }
 };
 
-
-
 const addItem = async (req, res) => {
   try {
-    const { name, price, stock } = req.body;
+    const { name, price, stock, category } = req.body;
 
     const safeStock = Math.max(0, Math.floor(Number(stock) || 0));
 
     const item = new Item({
       name,
       price,
+      category: category || "Uncategorized",
       stock: Math.min(safeStock, 10000),
       image: req.file ? req.file.path : "",
     });
@@ -99,7 +104,8 @@ const addItem = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: process.env.NODE_ENV === "development" ? error.message : "Server error",
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
     });
   }
 };
@@ -111,7 +117,8 @@ const deleteItem = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: process.env.NODE_ENV === "development" ? error.message : "Server error",
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
     });
   }
 };
@@ -120,7 +127,7 @@ const updateStock = async (req, res) => {
   try {
     const { stock } = req.body;
     const item = await Item.findById(req.params.id);
-    
+
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
@@ -128,13 +135,13 @@ const updateStock = async (req, res) => {
     const safeStock = Math.max(0, Math.floor(Number(stock) || 0));
     item.stock = Math.min(safeStock, 10000);
     await item.save();
-    
+
     // 🔴 NEW: Broadcast the stock change to all connected customers instantly!
     const io = req.app.get("io");
     if (io) {
-      io.emit("stock-updated", { 
-        itemId: item._id, 
-        newStock: item.stock 
+      io.emit("stock-updated", {
+        itemId: item._id,
+        newStock: item.stock,
       });
     }
 
@@ -142,7 +149,8 @@ const updateStock = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: process.env.NODE_ENV === "development" ? error.message : "Server error",
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
     });
   }
 };
@@ -159,9 +167,17 @@ const toggleAvailability = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: process.env.NODE_ENV === "development" ? error.message : "Server error",
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
     });
   }
 };
 
-module.exports = { getItems, addItem, deleteItem, updateStock, toggleAvailability,migrateAndCleanItems};
+module.exports = {
+  getItems,
+  addItem,
+  deleteItem,
+  updateStock,
+  toggleAvailability,
+  migrateAndCleanItems,
+};

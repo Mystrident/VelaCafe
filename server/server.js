@@ -1,7 +1,9 @@
 require("dotenv").config();
 
 require("./jobs/deleteOldOrders");
-const { attachIo: attachIoToReservationJob } = require("./jobs/releaseExpiredReservations");
+const {
+  attachIo: attachIoToReservationJob,
+} = require("./jobs/releaseExpiredReservations");
 
 const express = require("express");
 const http = require("http");
@@ -21,6 +23,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const authRoutes = require("./routes/authRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const userAuthRoutes = require("./routes/userAuthRoutes");
+const { razorpayWebhook } = require("./controllers/paymentController");
 
 const app = express();
 
@@ -72,6 +75,18 @@ app.use(
   }),
 );
 
+// Registered BEFORE express.json() and with its own raw-body parser: the
+// webhook's HMAC signature is computed over the exact raw bytes Razorpay
+// sent, which express.json() would otherwise consume and re-serialize
+// differently. This route calls res.json()/res.status() directly and never
+// calls next(), so it's fully handled here without reaching express.json()
+// below.
+app.post(
+  "/api/payment/webhook",
+  express.raw({ type: "application/json", limit: "50kb" }),
+  razorpayWebhook,
+);
+
 app.use(express.json({ limit: "50kb" }));
 
 app.use((req, res, next) => {
@@ -84,7 +99,7 @@ app.use(hpp());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
- message: "Too many requests. Please try again later.",
+  message: "Too many requests. Please try again later.",
 });
 
 app.use(limiter);
@@ -92,18 +107,18 @@ app.use(limiter);
 // Stricter limit on login endpoints to slow down brute-force attacks
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
- max: 10,
+  max: 10,
   message: "Too many login attempts. Please try again later.",
 });
 
-app.use("/api/admin/login",authLimiter);
-app.use("/api/auth/google",authLimiter);
+app.use("/api/admin/login", authLimiter);
+app.use("/api/auth/google", authLimiter);
 
 app.get("/", (req, res) => {
   res.send("VELAA CAFE API RUNNING");
 });
 
-app.get('/api/ping', (req, res) => {
+app.get("/api/ping", (req, res) => {
   res.status(200).json({ message: "Server is awake and ready!" });
 });
 

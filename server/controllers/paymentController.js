@@ -14,12 +14,16 @@ const RESERVATION_MINUTES = 10;
 
 // Helper to get local date string safely
 const getLocalDate = () => {
-  return new Date().toLocaleDateString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).split('/').reverse().join('-'); // Formats to YYYY-MM-DD
+  return new Date()
+    .toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+    .split("/")
+    .reverse()
+    .join("-"); // Formats to YYYY-MM-DD
 };
 
 const createRazorpayOrder = async (req, res) => {
@@ -73,7 +77,7 @@ const createRazorpayOrder = async (req, res) => {
           stock: { $gte: quantity },
         },
         { $inc: { stock: -quantity } },
-        { new: true, session }
+        { new: true, session },
       );
 
       if (!item) {
@@ -112,7 +116,10 @@ const createRazorpayOrder = async (req, res) => {
     const io = req.app.get("io");
     if (io) {
       validatedItems.forEach((v) => {
-        io.emit("stock-updated", { itemId: v.itemId, newStock: v.stockAfterReservation });
+        io.emit("stock-updated", {
+          itemId: v.itemId,
+          newStock: v.stockAfterReservation,
+        });
       });
     }
 
@@ -160,7 +167,8 @@ const createRazorpayOrder = async (req, res) => {
     session.endSession();
     console.error(error);
     res.status(500).json({
-      message: process.env.NODE_ENV === "development" ? error.message : "Server error",
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
     });
   }
 };
@@ -175,32 +183,130 @@ const releaseReservedStock = async (reservedItems, io) => {
       const restored = await Item.findByIdAndUpdate(
         itemId,
         { $inc: { stock: quantity } },
-        { new: true }
+        { new: true },
       );
       if (io && restored) {
         io.emit("stock-updated", { itemId, newStock: restored.stock });
       }
     } catch (err) {
       // Don't let one bad item stop the rest of the release from running.
-      console.error(`Failed to release reserved stock for item ${itemId}:`, err);
+      console.error(
+        `Failed to release reserved stock for item ${itemId}:`,
+        err,
+      );
     }
   }
 };
 
-const verifyPayment = async (req, res) => {
+// The single place that turns a PendingPayment into a real Order. Called
+// from TWO independent triggers: (1) verifyPayment, when the customer's
+// browser calls back after Razorpay's checkout succeeds, and (2) the
+// Razorpay webhook, which fires server-to-server regardless of whether the
+// customer's browser is even still open. Either one might arrive first, or
+// only one might arrive at all (browser closed before it could call back) —
+// this function is safe to call from both, any number of times, for the
+// same payment.
+//
+// Idempotency is enforced two ways: an in-app check (does an Order for this
+// razorpayOrderId already exist?) AND a DB-level unique index on
+// Order.razorpayOrderId as the real guarantee against a race where both
+// triggers reach this function at almost the same instant.
+const finalizePendingPayment = async (razorpayOrderId, razorpayPaymentId) => {
+  const existingOrder = await Order.findOne({ razorpayOrderId });
+  if (existingOrder) {
+    return { status: "already_processed", order: existingOrder };
+  }
+
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const pending = await PendingPayment.findOne({ razorpayOrderId }, null, {
+      session,
+    });
+
+    if (!pending) {
+      await session.abortTransaction();
+      session.endSession();
+      return { status: "not_found" };
+    }
+
+    // Use the user recorded on the reservation itself, not req.user — the
+    // webhook trigger has no authenticated request at all, so pending.userId
+    // is the only reliable source of who this payment belongs to.
+    const user = await User.findById(pending.userId).session(session);
+    if (!user) {
+      await session.abortTransaction();
+      session.endSession();
+      return { status: "user_not_found" };
+    }
+
+    const today = getLocalDate();
+    const counter = await Counter.findOneAndUpdate(
+      { date: today },
+      { $inc: { sequence: 1 } },
+      { new: true, upsert: true, session },
+    );
+
+    await PendingPayment.deleteOne({ _id: pending._id }, { session });
+
+    // If the reservation had already expired and been released (stock
+    // given back to the pool) by the time payment landed, we can no longer
+    // honor it — flag for a manual refund instead of silently losing track
+    // of captured money.
+    const order = new Order({
+      userId: user._id,
+      userName: user.name,
+      userEmail: user.email,
+      orderDate: today,
+      pickupTime: pending.pickupTime,
+      items: pending.items,
+      totalAmount: pending.totalAmount,
+      orderNumber: counter.sequence,
+      paymentStatus: pending.released ? "REFUND_REQUIRED" : "PAID",
+      status: "Pending",
+      razorpayOrderId,
+      razorpayPaymentId,
+    });
+
+    await order.save({ session });
+    await session.commitTransaction();
+    session.endSession();
+
+    return {
+      status: pending.released ? "refund_required" : "paid",
+      order,
+    };
+  } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
+
+    // A duplicate-key error on razorpayOrderId means the OTHER trigger
+    // (webhook vs. client callback) finalized this exact payment a moment
+    // before us — that's a success, not a failure. Fetch and return what
+    // it created instead of erroring out.
+    if (error.code === 11000) {
+      const order = await Order.findOne({ razorpayOrderId });
+      if (order) {
+        return { status: "already_processed", order };
+      }
+    }
+    throw error;
+  }
+};
+
+const verifyPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+      req.body;
 
     if (
       typeof razorpay_order_id !== "string" ||
       typeof razorpay_payment_id !== "string" ||
       typeof razorpay_signature !== "string"
     ) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({ message: "Payment verification failed" });
     }
 
@@ -216,108 +322,121 @@ const verifyPayment = async (req, res) => {
       expected.length !== received.length ||
       !crypto.timingSafeEqual(expected, received)
     ) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({ message: "Payment verification failed" });
     }
 
-    // NOTE: stock is NOT touched here anymore. It was already atomically
-    // reserved back in createRazorpayOrder, so there is nothing left to
-    // check or decrement at this point — we're just finalizing the order
-    // for a reservation that (as far as we know) is still held.
-    const pending = await PendingPayment.findOne(
-      { razorpayOrderId: razorpay_order_id, userId: req.user.id },
-      null,
-      { session }
+    const result = await finalizePendingPayment(
+      razorpay_order_id,
+      razorpay_payment_id,
     );
 
-    if (!pending) {
-      await session.abortTransaction();
-      session.endSession();
+    if (result.status === "not_found") {
       return res.status(400).json({
         message: "No matching payment found or it was already processed",
       });
     }
-
-    const user = await User.findById(req.user.id).session(session);
-    if (!user) {
-      await session.abortTransaction();
-      session.endSession();
+    if (result.status === "user_not_found") {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Generate Order Number safely
-    const today = getLocalDate();
-    const counter = await Counter.findOneAndUpdate(
-      { date: today },
-      { $inc: { sequence: 1 } },
-      { new: true, upsert: true, session }
-    );
+    // Defense in depth: the signature check already proves this is a
+    // legitimate Razorpay callback, but confirm the resulting order
+    // actually belongs to whoever is logged in and making this request,
+    // so one customer's browser can't fetch another's order details by
+    // guessing/replaying a razorpay_order_id.
+    if (result.order.userId.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: "This payment does not belong to your account" });
+    }
 
-    // Edge case: the payment landed on our server just as the reservation
-    // hit its expiry and releaseExpiredReservations.js already put the
-    // stock back for someone else to buy. The money IS captured by
-    // Razorpay, but we can no longer honor the reservation, so flag it
-    // for a manual refund instead of silently losing track of the payment.
-    if (pending.released) {
-      await PendingPayment.deleteOne({ _id: pending._id }, { session });
-
-      const orphanedOrder = new Order({
-        userId: user._id,
-        userName: user.name,
-        userEmail: user.email,
-        orderDate: today,
-        pickupTime: pending.pickupTime,
-        items: pending.items,
-        totalAmount: pending.totalAmount,
-        orderNumber: counter.sequence,
-        paymentStatus: "REFUND_REQUIRED",
-        status: "Pending",
-        razorpayOrderId: razorpay_order_id,
-        razorpayPaymentId: razorpay_payment_id,
-      });
-      await orphanedOrder.save({ session });
-      await session.commitTransaction();
-      session.endSession();
-
+    if (result.order.paymentStatus === "REFUND_REQUIRED") {
       return res.status(201).json({
         message:
           "Payment successful, but your reservation timed out while you were paying and the item(s) went back on sale. Please see the cafe admin for a refund.",
-        order: orphanedOrder,
+        order: result.order,
         warning: true,
       });
     }
 
-    await PendingPayment.deleteOne({ _id: pending._id }, { session });
-
-    const order = new Order({
-      userId: user._id,
-      userName: user.name,
-      userEmail: user.email,
-      orderDate: today,
-      pickupTime: pending.pickupTime,
-      items: pending.items,
-      totalAmount: pending.totalAmount,
-      orderNumber: counter.sequence,
-      paymentStatus: "PAID",
-      status: "Pending",
-      razorpayOrderId: razorpay_order_id,
-      razorpayPaymentId: razorpay_payment_id,
-    });
-
-    await order.save({ session });
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(201).json({ message: "Payment successful", order });
+    res
+      .status(201)
+      .json({ message: "Payment successful", order: result.order });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     console.error(error);
     res.status(500).json({
-      message: process.env.NODE_ENV === "development" ? error.message : "Server error",
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
     });
   }
 };
 
-module.exports = { createRazorpayOrder, verifyPayment };
+// Razorpay calls this directly, server-to-server, whenever a payment is
+// captured — independent of whether the customer's browser is still open,
+// still online, or ever called /verify-payment at all. This is what closes
+// the "paid but stuck in PendingPayments" gap: even if the client-side
+// callback never arrives, this will.
+const razorpayWebhook = async (req, res) => {
+  try {
+    const signature = req.headers["x-razorpay-signature"];
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    if (!signature || !secret) {
+      return res.status(400).json({ message: "Missing webhook signature" });
+    }
+
+    // req.body is the raw request Buffer here, not parsed JSON — see
+    // server.js, where this route is mounted with express.raw() instead of
+    // express.json(). The signature is computed over the exact raw bytes
+    // Razorpay sent; re-serializing a parsed object would not reliably
+    // reproduce the same bytes.
+    const expectedSignature = crypto
+      .createHmac("sha256", secret)
+      .update(req.body)
+      .digest("hex");
+
+    const expectedBuf = Buffer.from(expectedSignature, "utf8");
+    const receivedBuf = Buffer.from(signature, "utf8");
+
+    if (
+      expectedBuf.length !== receivedBuf.length ||
+      !crypto.timingSafeEqual(expectedBuf, receivedBuf)
+    ) {
+      return res.status(400).json({ message: "Invalid webhook signature" });
+    }
+
+    const event = JSON.parse(req.body.toString("utf8"));
+
+    if (event.event === "payment.captured") {
+      const payment = event.payload?.payment?.entity;
+      if (payment?.order_id && payment?.id) {
+        const result = await finalizePendingPayment(
+          payment.order_id,
+          payment.id,
+        );
+        console.log(
+          `[razorpay webhook] payment.captured for order ${payment.order_id}: ${result.status}`,
+        );
+      }
+    }
+    // Any other event type: acknowledge without acting on it. Razorpay
+    // sends many event types (order.paid, payment.failed, etc.) — silently
+    // ack anything we don't specifically handle rather than error, or
+    // Razorpay will keep retrying delivery.
+
+    res.status(200).json({ received: true });
+  } catch (error) {
+    console.error("Webhook processing failed:", error);
+    // A non-2xx here makes Razorpay retry delivery later, which is exactly
+    // what we want for a transient failure on our end (DB hiccup, etc.) —
+    // the payment itself is already safely captured on Razorpay's side
+    // either way.
+    res.status(500).json({ message: "Webhook processing failed" });
+  }
+};
+module.exports = {
+  createRazorpayOrder,
+  verifyPayment,
+  razorpayWebhook,
+  finalizePendingPayment,
+};
