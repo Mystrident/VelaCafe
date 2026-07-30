@@ -209,7 +209,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
 
         {!customerToken ? (
           <div className="flex flex-col items-center gap-4 mb-2">
-            <p className="text-gray-500 font-medium text-center">Please verify your SASTRA email to continue.</p>
+            <p className="text-gray-500 font-medium text-center">Please verify your <b>SASTRA</b> email to continue.</p>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => alert("Google Login Failed")}
