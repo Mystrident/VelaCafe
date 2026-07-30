@@ -70,7 +70,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
     try {
       const token = localStorage.getItem("customerToken");
       if (!token) {
-        alert("Please login with Google");
+        alert("Please login with Google.");
         setCustomerToken(null);
         return;
       }
