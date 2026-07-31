@@ -344,7 +344,7 @@ const verifyPayment = async (req, res) => {
     // actually belongs to whoever is logged in and making this request,
     // so one customer's browser can't fetch another's order details by
     // guessing/replaying a razorpay_order_id.
-    if (result.order.userId.toString() !== req.user.id) {
+    if (result.order.userId.toString() !== req.user.id.toString()) {
       return res
         .status(403)
         .json({ message: "This payment does not belong to your account" });
