@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { motion, AnimatePresence } from "framer-motion";
+import api from "../api/axios";
 
 function StatusModal({
   orderId,
@@ -15,9 +16,45 @@ function StatusModal({
   useEffect(() => {
     if (!orderId) return;
 
+    // The socket below only reports status CHANGES that happen while it's
+    // connected — it has no memory of anything that fired before this
+    // component mounted (or while it was briefly disconnected). Without
+    // this, an order marked "Ready"/"Completed" while the tracker wasn't
+    // actively listening (page refresh, dropped wifi, tab opened late)
+    // would stay stuck showing the old cached status forever. Pulling the
+    // real status directly fixes that, both on first mount and again any
+    // time the socket (re)connects.
+    const syncStatus = async () => {
+      try {
+        const customerToken = localStorage.getItem("customerToken");
+        if (!customerToken) return;
+
+        const res = await api.get(`/api/orders/customer/${orderId}/status`, {
+          headers: { Authorization: `Bearer ${customerToken}` },
+        });
+
+        // Idempotent either way, so just always report the confirmed
+        // server status rather than tracking whether it "changed".
+        setStatus(res.data.status);
+        onStatusChange?.(res.data.status);
+      } catch (error) {
+        // Non-fatal: fall back to whatever the socket reports live, or
+        // the cached status this component was initialized with.
+        console.log("Couldn't sync order status:", error);
+      }
+    };
+
+    syncStatus();
+
     const socket = io(import.meta.env.VITE_API_URL.replace("/api", ""));
 
-    socket.emit("join-order", orderId);
+    // Fires on the initial connection AND every reconnect, so a dropped
+    // connection that comes back doesn't leave the room-join or the
+    // status stale.
+    socket.on("connect", () => {
+      socket.emit("join-order", orderId);
+      syncStatus();
+    });
 
     socket.on("order-status-updated", (data) => {
       if (data.orderId === orderId) {
@@ -89,7 +126,9 @@ function StatusModal({
             <button
               onClick={handleCloseClick}
               className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors font-bold"
-              title={status === "Completed" ? "Close Order" : "Minimize Tracker"}
+              title={
+                status === "Completed" ? "Close Order" : "Minimize Tracker"
+              }
             >
               ✕
             </button>
@@ -115,7 +154,7 @@ function StatusModal({
           {status === "Ready" && (
             <div className="mt-4 text-center">
               <p className="text-sm font-semibold text-green-600">
-                 Your food is hot and ready!
+                Your food is hot and ready!
               </p>
               <p className="text-xs text-gray-500 mt-1">
                 Please pick it up at the counter.
