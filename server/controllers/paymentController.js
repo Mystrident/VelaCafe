@@ -6,6 +6,7 @@ const Item = require("../models/Item");
 const User = require("../models/User");
 const Counter = require("../models/Counter");
 const PendingPayment = require("../models/PendingPayment");
+const { sendOrderPushNotification } = require("../services/pushNotificationService");
 
 // How long a stock reservation is held while the user is on the Razorpay
 // checkout screen. Matches the "soft lock" window BookMyShow-style seat
@@ -211,7 +212,11 @@ const releaseReservedStock = async (reservedItems, io) => {
 // razorpayOrderId already exist?) AND a DB-level unique index on
 // Order.razorpayOrderId as the real guarantee against a race where both
 // triggers reach this function at almost the same instant.
-const finalizePendingPayment = async (razorpayOrderId, razorpayPaymentId) => {
+const finalizePendingPayment = async (
+  razorpayOrderId,
+  razorpayPaymentId,
+  io,
+) => {
   const existingOrder = await Order.findOne({ razorpayOrderId });
   if (existingOrder) {
     return { status: "already_processed", order: existingOrder };
@@ -273,6 +278,26 @@ const finalizePendingPayment = async (razorpayOrderId, razorpayPaymentId) => {
     await session.commitTransaction();
     session.endSession();
 
+    // Notify only authenticated admin sockets and only after the order has
+    // been committed. This is deliberately here (rather than when a cart is
+    // reserved) so admins are never alerted for an abandoned/unpaid cart.
+    if (io) {
+      io.to("admins").emit("new-order", {
+        _id: order._id.toString(),
+        orderNumber: order.orderNumber,
+        userName: order.userName,
+        pickupTime: order.pickupTime,
+        totalAmount: order.totalAmount,
+        items: order.items,
+        createdAt: order.createdAt,
+      });
+    }
+    // Web Push is independent of an open Socket.IO connection, so an admin
+    // can receive it after closing the site or browser.
+    sendOrderPushNotification(order).catch((error) =>
+      console.error("Order push notification failed:", error),
+    );
+
     return {
       status: pending.released ? "refund_required" : "paid",
       order,
@@ -328,6 +353,7 @@ const verifyPayment = async (req, res) => {
     const result = await finalizePendingPayment(
       razorpay_order_id,
       razorpay_payment_id,
+      req.app.get("io"),
     );
 
     if (result.status === "not_found") {
@@ -413,6 +439,7 @@ const razorpayWebhook = async (req, res) => {
         const result = await finalizePendingPayment(
           payment.order_id,
           payment.id,
+          req.app.get("io"),
         );
         console.log(
           `[razorpay webhook] payment.captured for order ${payment.order_id}: ${result.status}`,

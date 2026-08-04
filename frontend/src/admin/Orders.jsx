@@ -11,17 +11,19 @@ function Orders() {
     const interval = setInterval(() => {
       fetchOrders();
     }, 5000);
-    return () => clearInterval(interval);
+    const handleNewOrder = () => fetchOrders();
+    window.addEventListener("admin-new-order", handleNewOrder);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("admin-new-order", handleNewOrder);
+    };
   }, []);
 
   const fetchOrders = async () => {
     try {
       const res = await api.get("/api/orders");
 
-console.log(res.data);
-console.log(Array.isArray(res.data));
-
-setOrders(res.data);
+      setOrders(res.data);
     } catch (error) {
       console.log(error);
     }
