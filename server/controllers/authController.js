@@ -1,6 +1,10 @@
 const Admin = require("../models/Admin");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const {
+  getPublicKey,
+  saveSubscription,
+} = require("../services/pushNotificationService");
 
 const loginAdmin = async (req, res) => {
   try {
@@ -54,6 +58,34 @@ const loginAdmin = async (req, res) => {
   }
 };
 
+const getPushPublicKey = (req, res) => {
+  const publicKey = getPublicKey();
+  if (!publicKey) {
+    return res.status(503).json({
+      message: "Push notifications have not been configured on the server",
+    });
+  }
+  return res.json({ publicKey });
+};
+
+const subscribeToPushNotifications = async (req, res) => {
+  const subscription = req.body;
+  if (
+    !subscription ||
+    typeof subscription.endpoint !== "string" ||
+    !subscription.endpoint.startsWith("https://") ||
+    typeof subscription.keys?.p256dh !== "string" ||
+    typeof subscription.keys?.auth !== "string"
+  ) {
+    return res.status(400).json({ message: "Invalid push subscription" });
+  }
+
+  await saveSubscription(req.admin.id, subscription);
+  return res.status(201).json({ message: "Push subscription saved" });
+};
+
 module.exports = {
   loginAdmin,
+  getPushPublicKey,
+  subscribeToPushNotifications,
 };

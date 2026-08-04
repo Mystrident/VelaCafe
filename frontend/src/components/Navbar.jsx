@@ -1,13 +1,13 @@
-import { HiMenu } from "react-icons/hi";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { GoogleLogin } from "@react-oauth/google";
+import api from "../api/axios";
 
 function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    setIsLoggedIn(!!localStorage.getItem("customerToken"));
-  }, []);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => !!localStorage.getItem("customerToken"),
+  );
+  const [signInOpen, setSignInOpen] = useState(false);
 
   const scrollToMenu = () => {
     const section = document.getElementById("menu-section");
@@ -18,8 +18,30 @@ function Navbar() {
     localStorage.removeItem("customerToken");
     localStorage.removeItem("activeOrders");
     setIsLoggedIn(false);
-    window.location.reload();
+    setSignInOpen(false);
   };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await api.post("/api/auth/google", {
+        credential: credentialResponse.credential,
+      });
+      localStorage.setItem("customerToken", res.data.token);
+      setIsLoggedIn(true);
+      setSignInOpen(false);
+    } catch (error) {
+      alert(error.response?.data?.message || "Google sign in failed");
+    }
+  };
+
+  const signInControl = (
+    <GoogleLogin
+      onSuccess={handleGoogleSuccess}
+      onError={() => alert("Google sign in failed")}
+      theme="outline"
+      size="medium"
+    />
+  );
 
   return (
     <motion.div
@@ -43,30 +65,37 @@ function Navbar() {
         <div className="hidden md:flex items-center gap-10 font-bold text-[#4b1e14] text-sm tracking-wide">
           <button onClick={scrollToMenu} className="hover:text-orange-500 transition-colors">MENU</button>
           <button className="hover:text-orange-500 transition-colors">CONTACT</button>
-          {isLoggedIn && (
+          {isLoggedIn ? (
             <div className="flex items-center gap-3">
               <button
                 onClick={handleLogout}
                 className="bg-gray-100 text-[#4b1e14] px-5 py-2 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm"
               >
-                .Sign Out.
+                Sign Out
               </button>
+            </div>
+          ) : (
+            <div className="relative">
+              <button onClick={() => setSignInOpen((open) => !open)} className="bg-[#4b1e14] text-white px-5 py-2 rounded-xl hover:bg-orange-500 transition-colors shadow-sm">
+                Sign In
+              </button>
+              {signInOpen && <div className="absolute right-0 top-12 bg-white p-3 rounded-xl shadow-lg border border-gray-100">{signInControl}</div>}
             </div>
           )}
         </div>
-        <div className="md:hidden flex items-center gap-3">
-          {isLoggedIn && (
-            <button
-              onClick={handleLogout}
-              aria-label="Sign Out"
-              className="flex items-center justify-center w-20 h-10 rounded-xl bg-gray-100 text-[#4b1e14] hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm text-xl"
-            >
-              Signout
-              
+        <div className="md:hidden relative">
+          {isLoggedIn ? (
+            <button onClick={handleLogout} className="bg-gray-100 text-[#4b1e14] px-4 py-2 rounded-xl font-bold hover:bg-red-50 hover:text-red-600 transition-colors">
+              Sign Out
             </button>
-      
+          ) : (
+            <>
+              <button onClick={() => setSignInOpen((open) => !open)} className="bg-[#4b1e14] text-white px-4 py-2 rounded-xl font-bold hover:bg-orange-500 transition-colors">
+                Sign In
+              </button>
+              {signInOpen && <div className="absolute right-0 top-12 bg-white p-3 rounded-xl shadow-lg border border-gray-100">{signInControl}</div>}
+            </>
           )}
-          <button className="text-3xl text-[#4b1e14] hover:text-orange-500 transition-colors"><HiMenu /></button>
         </div>
       </div>
     </motion.div>

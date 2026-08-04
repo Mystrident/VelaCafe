@@ -15,6 +15,7 @@ const rateLimit = require("express-rate-limit");
 const mongoSanitize = require("mongo-sanitize");
 
 const { Server } = require("socket.io");
+const jwt = require("jsonwebtoken");
 
 const connectDB = require("./config/db");
 
@@ -39,6 +40,23 @@ const io = new Server(server, {
 app.set("io", io);
 attachIoToReservationJob(io);
 
+// Stock updates are public, but the admin order feed is not. Authenticate
+// admin sockets once during their Socket.IO handshake before allowing them
+// into the private admin room.
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+  if (!token) return next();
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role === "admin") socket.data.adminId = decoded.id;
+  } catch {
+    // A bad token simply has no admin privileges; normal public socket
+    // events (such as stock updates) can still connect.
+  }
+  next();
+});
+
 io.on("connection", (socket) => {
   console.log("Socket Connected:", socket.id);
 
@@ -51,6 +69,10 @@ io.on("connection", (socket) => {
     socket.join(orderId);
 
     console.log(`Socket ${socket.id} joined order ${orderId}`);
+  });
+
+  socket.on("join-admin", () => {
+    if (socket.data.adminId) socket.join("admins");
   });
 
   socket.on("disconnect", () => {
