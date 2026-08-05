@@ -7,10 +7,12 @@ function StatusModal({
   orderId,
   orderNumber,
   initialStatus = "Pending",
+  initialItems = [],
   onStatusChange,
   onClose,
 }) {
   const [status, setStatus] = useState(initialStatus);
+  const [items, setItems] = useState(initialItems);
   const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
@@ -35,7 +37,9 @@ function StatusModal({
 
         // Idempotent either way, so just always report the confirmed
         // server status rather than tracking whether it "changed".
+        
         setStatus(res.data.status);
+        setItems(res.data.items);
         onStatusChange?.(res.data.status);
       } catch (error) {
         // Non-fatal: fall back to whatever the socket reports live, or
@@ -133,6 +137,31 @@ function StatusModal({
               ✕
             </button>
           </div>
+
+ <div className="mb-4">
+  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+    <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">
+      Order Items
+    </p>
+
+    <div className="space-y-2">
+      {items.map((item, index) => (
+        <div
+          key={index}
+          className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm"
+        >
+          <span className="font-semibold text-[#3a1710]">
+            {item.name}
+          </span>
+
+          <span className="bg-orange-100 text-orange-700 text-sm font-bold px-3 py-1 rounded-full">
+            × {item.quantity}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
 
           <div
             className={`
