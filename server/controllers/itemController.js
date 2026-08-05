@@ -92,7 +92,6 @@ const addItem = async (req, res) => {
     const safeStock = Math.max(0, Math.floor(Number(stock) || 0));
 
     const item = new Item({
-      name,
       price,
       category: category || "Uncategorized",
       stock: Math.min(safeStock, 10000),

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { motion } from "framer-motion";
 import api from "../api/axios";
@@ -35,7 +35,16 @@ const isTokenExpired = (token) => {
 function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
   const [pickupTime, setPickupTime] = useState("");
   const [loading, setLoading] = useState(false);
-  const [customerToken, setCustomerToken] = useState(null);
+  const [customerToken, setCustomerToken] = useState(() => {
+    const token = localStorage.getItem("customerToken");
+    if (token && !isTokenExpired(token)) return token;
+
+    if (token) {
+      localStorage.removeItem("customerToken");
+      window.dispatchEvent(new Event("customer-auth-changed"));
+    }
+    return null;
+  });
 
   const orderSummary = items.filter((item) => cart[item._id] > 0);
   const totalAmountToPay = orderSummary.reduce(
@@ -43,22 +52,13 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
     0
   );
 
-  useEffect(() => {
-    const token = localStorage.getItem("customerToken");
-    if (token && !isTokenExpired(token)) {
-      setCustomerToken(token);
-    } else if (token) {
-      // Token exists but is expired — don't show "Student verified" for it.
-      localStorage.removeItem("customerToken");
-    }
-  }, []);
-
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       const res = await api.post("/api/auth/google", {
         credential: credentialResponse.credential,
       });
       localStorage.setItem("customerToken", res.data.token);
+      window.dispatchEvent(new Event("customer-auth-changed"));
       setCustomerToken(res.data.token);
     } catch (error) {
       console.log(error);
@@ -115,6 +115,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
           // check (e.g. it expired mid-session) and a token rejected for
           // any other reason — either way, stop showing "verified" for it.
           localStorage.removeItem("customerToken");
+          window.dispatchEvent(new Event("customer-auth-changed"));
           setCustomerToken(null);
           alert(error.response?.data?.message || "Session expired. Please login again.");
           setLoading(false);
@@ -168,6 +169,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
               window.location.reload();
             } else if (error.response?.status === 401) {
               localStorage.removeItem("customerToken");
+              window.dispatchEvent(new Event("customer-auth-changed"));
               setCustomerToken(null);
               alert(errorMsg || "Session expired. Please login again.");
             } else {

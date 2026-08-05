@@ -5,6 +5,11 @@ const itemSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  normalizedName: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
   price: {
     type: Number,
     required: true,

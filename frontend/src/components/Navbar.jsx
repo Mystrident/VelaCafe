@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import api from "../api/axios";
 
@@ -8,6 +8,21 @@ function Navbar() {
     () => !!localStorage.getItem("customerToken"),
   );
   const [signInOpen, setSignInOpen] = useState(false);
+
+  useEffect(() => {
+    const syncAuthenticationState = () => {
+      setIsLoggedIn(!!localStorage.getItem("customerToken"));
+    };
+
+    // `storage` syncs changes made in another tab; this custom event covers
+    // login/logout performed elsewhere in the current tab (such as checkout).
+    window.addEventListener("storage", syncAuthenticationState);
+    window.addEventListener("customer-auth-changed", syncAuthenticationState);
+    return () => {
+      window.removeEventListener("storage", syncAuthenticationState);
+      window.removeEventListener("customer-auth-changed", syncAuthenticationState);
+    };
+  }, []);
 
   const scrollToMenu = () => {
     const section = document.getElementById("menu-section");
@@ -27,6 +42,7 @@ function Navbar() {
         credential: credentialResponse.credential,
       });
       localStorage.setItem("customerToken", res.data.token);
+      window.dispatchEvent(new Event("customer-auth-changed"));
       setIsLoggedIn(true);
       setSignInOpen(false);
     } catch (error) {
