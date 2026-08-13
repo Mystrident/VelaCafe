@@ -59,7 +59,8 @@ const getCustomerOrderStatus = async (req, res) => {
     const order = await Order.findOne({
       _id: req.params.id,
       userId: req.user.id,
-    }).select("status orderNumber _id");
+      
+    }).select("status orderNumber _id items");
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -69,6 +70,10 @@ const getCustomerOrderStatus = async (req, res) => {
       orderId: order._id,
       orderNumber: order.orderNumber,
       status: order.status,
+      items: order.items.map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+      })),
     });
   } catch (error) {
     console.error(error);

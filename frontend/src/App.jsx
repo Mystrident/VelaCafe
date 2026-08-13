@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Home from "./customer/Home";
+import SastranetSso from "./customer/SastranetSso";
 
 import Login from "./admin/Login";
 
@@ -15,6 +16,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+
+        <Route path="/sso" element={<SastranetSso />} />
 
         <Route path="/login" element={<Login />} />
 
