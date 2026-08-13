@@ -136,6 +136,15 @@ const authLimiter = rateLimit({
 app.use("/api/admin/login", authLimiter);
 app.use("/api/auth/google", authLimiter);
 
+// Sastranet requests are already signed and one-time-use. A separate limit
+// avoids blocking a group of students who share one campus/mobile-network IP.
+const sastranetAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many Sastranet sign-in attempts. Please try again later.",
+});
+app.use("/api/auth/sastranet", sastranetAuthLimiter);
+
 app.get("/", (req, res) => {
   res.send("VELAA CAFE API RUNNING");
 });
