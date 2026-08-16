@@ -18,9 +18,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      const requestUrl = error.config?.url || "";
+      const isCustomerOrderRoute = requestUrl.includes("/api/orders/customer/");
       const isAdminRoute =
-        error.config?.url?.includes("/api/orders") ||
-        error.config?.url?.includes("/api/items");
+        (!isCustomerOrderRoute && requestUrl.includes("/api/orders")) ||
+        requestUrl.includes("/api/items");
 
       if (isAdminRoute) {
         localStorage.removeItem("token");

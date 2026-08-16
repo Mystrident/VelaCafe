@@ -3,11 +3,29 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --cafe-bg: #fdfbf7;
+  --cafe-surface: #ffffff;
+  --cafe-elevated: #f4ebe1;
+  --cafe-text: #3a1710;
+  --cafe-muted: #8b5e3c;
+  --cafe-border: #eadfd6;
+}
+
+.dark {
+  --cafe-bg: #17110f;
+  --cafe-surface: #211815;
+  --cafe-elevated: #2b201c;
+  --cafe-text: #f7ede5;
+  --cafe-muted: #c7aea0;
+  --cafe-border: #4a342c;
+}
+
 /* 2. Global Base Styles Injection */
 @layer base {
   html, body {
     /* This forces the Outfit font (sans), smooths the text, and sets the background globally */
-    @apply font-sans antialiased bg-[#fdfbf7] text-[#3a1710] m-0 p-0;
+    @apply font-sans antialiased bg-cafe-bg text-cafe-text m-0 p-0;
     scroll-behavior: smooth;
   }
 }

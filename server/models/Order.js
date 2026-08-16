@@ -72,4 +72,10 @@ const orderSchema = new mongoose.Schema(
   },
 );
 
+// Permanent order history is read most often by operational date for admins
+// and by account for customers. These indexes keep both paginated views fast
+// as the collection grows.
+orderSchema.index({ orderDate: 1, createdAt: -1 });
+orderSchema.index({ userId: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Order", orderSchema);

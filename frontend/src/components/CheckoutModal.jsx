@@ -2,6 +2,7 @@ import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { motion } from "framer-motion";
 import api from "../api/axios";
+import { saveCustomerProfile } from "../utils/customerProfile";
 
 // Utility function to load the Razorpay script dynamically
 const loadRazorpayScript = (src) => {
@@ -58,6 +59,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
         credential: credentialResponse.credential,
       });
       localStorage.setItem("customerToken", res.data.token);
+      saveCustomerProfile(res.data.user);
       window.dispatchEvent(new Event("customer-auth-changed"));
       setCustomerToken(res.data.token);
     } catch (error) {
@@ -205,13 +207,13 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md relative z-10 border border-gray-100 max-h-[90vh] overflow-y-auto scrollbar-hide"
+        className="bg-cafe-surface p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md relative z-10 border border-cafe-border max-h-[90vh] overflow-y-auto scrollbar-hide"
       >
-        <h1 className="text-3xl font-black mb-6 text-[#3a1710] tracking-tight">Checkout</h1>
+        <h1 className="text-3xl font-black mb-6 text-cafe-text tracking-tight">Checkout</h1>
 
         {!customerToken ? (
           <div className="flex flex-col items-center gap-4 mb-2">
-            <p className="text-gray-500 font-medium text-center">Please verify your <b>SASTRA</b> email to continue.</p>
+            <p className="text-cafe-muted font-medium text-center">Please verify your <b>SASTRA</b> email to continue.</p>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => alert("Google Login Failed")}
@@ -223,30 +225,30 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
               Student verified successfully
             </div>
 
-            <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-6">
-              <h3 className="text-[#3a1710] font-black mb-4 uppercase tracking-wider text-xs">Order Summary</h3>
+            <div className="bg-cafe-elevated p-5 rounded-2xl border border-cafe-border mb-6">
+              <h3 className="text-cafe-text font-black mb-4 uppercase tracking-wider text-xs">Order Summary</h3>
               <div className="space-y-3 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                 {orderSummary.map((item) => (
-                  <div key={item._id} className="flex justify-between items-center text-sm font-medium text-gray-600">
+                  <div key={item._id} className="flex justify-between items-center text-sm font-medium text-cafe-muted">
                     <span className="truncate max-w-[200px]">
                       {item.name}
                       <span className="text-orange-500 font-bold ml-2">x{cart[item._id]}</span>
                     </span>
-                    <span className="text-[#3a1710] font-bold shrink-0">
+                    <span className="text-cafe-text font-bold shrink-0">
                       ₹{item.price * cart[item._id]}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                <span className="font-bold text-gray-500 uppercase text-xs tracking-wider">Total to Pay</span>
+              <div className="flex justify-between items-center mt-4 pt-4 border-t border-cafe-border">
+                <span className="font-bold text-cafe-muted uppercase text-xs tracking-wider">Total to Pay</span>
                 <span className="text-2xl font-black text-orange-500">₹{totalAmountToPay}</span>
               </div>
             </div>
 
             <div className="space-y-5">
               <div>
-                <label className="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide ml-2">
+                <label className="block text-xs font-bold text-cafe-muted mb-2 uppercase tracking-wide ml-2">
                   Select Exact Pickup Time (08:45 AM - 06:00 PM)
                 </label>
                 <input
@@ -255,7 +257,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
                   max="18:00"
                   value={pickupTime}
                   onChange={(e) => setPickupTime(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-100 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-orange-400 focus:bg-white transition-all font-bold text-[#3a1710] text-xl cursor-pointer"
+                  className="w-full bg-cafe-elevated border border-cafe-border p-4 rounded-2xl outline-none focus:ring-2 focus:ring-orange-400 focus:bg-cafe-surface transition-all font-bold text-cafe-text text-xl cursor-pointer"
                   required
                 />
               </div>
@@ -273,7 +275,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
 
         <button
           onClick={closeModal}
-          className="mt-6 w-full text-gray-400 font-bold hover:text-[#3a1710] transition-colors"
+          className="mt-6 w-full text-cafe-muted font-bold hover:text-cafe-text transition-colors"
         >
           Cancel Order
         </button>

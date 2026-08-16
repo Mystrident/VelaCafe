@@ -18,6 +18,7 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 
 const connectDB = require("./config/db");
+const Order = require("./models/Order");
 
 const itemRoutes = require("./routes/itemRoutes");
 const orderRoutes = require("./routes/orderRoutes");
@@ -30,19 +31,31 @@ const app = express();
 
 const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://vela-cafe.vercel.app",
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
   },
+  credentials: true,
+};
+
+const io = new Server(server, {
+  cors: corsOptions,
 });
 
 app.set("io", io);
 attachIoToReservationJob(io);
 
-// Stock updates are public, but the admin order feed is not. Authenticate
-// admin sockets once during their Socket.IO handshake before allowing them
-// into the private admin room.
+// Stock updates are public, but admin and customer order rooms are private.
+// Authenticate a socket once during its handshake before it can join either.
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
   if (!token) return next();
@@ -50,6 +63,7 @@ io.use((socket, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (decoded.role === "admin") socket.data.adminId = decoded.id;
+    if (decoded.role === "customer") socket.data.customerId = decoded.id;
   } catch {
     // A bad token simply has no admin privileges; normal public socket
     // events (such as stock updates) can still connect.
@@ -60,15 +74,28 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
   console.log("Socket Connected:", socket.id);
 
-  socket.on("join-order", (orderId) => {
+  socket.on("join-order", async (orderId) => {
     // Only allow joining rooms that look like real order ids
     if (typeof orderId !== "string" || !/^[a-f\d]{24}$/i.test(orderId)) {
       return;
     }
 
-    socket.join(orderId);
+    // Status updates may contain order details, so a customer must prove
+    // ownership before joining this room. Public stock sockets remain open.
+    if (!socket.data.customerId) return;
 
-    console.log(`Socket ${socket.id} joined order ${orderId}`);
+    try {
+      const order = await Order.exists({
+        _id: orderId,
+        userId: socket.data.customerId,
+      });
+      if (!order) return;
+
+      socket.join(orderId);
+      console.log(`Socket ${socket.id} joined order ${orderId}`);
+    } catch (error) {
+      console.error(`Failed to authorize order room ${orderId}:`, error);
+    }
   });
 
   socket.on("join-admin", () => {
@@ -90,12 +117,7 @@ app.disable("x-powered-by");
 
 app.use(helmet());
 
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-  }),
-);
+app.use(cors(corsOptions));
 
 // Registered BEFORE express.json() and with its own raw-body parser: the
 // webhook's HMAC signature is computed over the exact raw bytes Razorpay
@@ -154,7 +176,6 @@ app.get("/api/ping", (req, res) => {
 });
 
 app.use("/api/items", itemRoutes);
-
 
 app.use("/api/orders", orderRoutes);
 

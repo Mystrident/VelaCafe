@@ -48,11 +48,11 @@ function Orders() {
     }
   };
 
-  // 🔴 NEW LOGIC: Group orders by Date
+  // The API is the source of truth for the Kolkata operational day. Use the
+  // persisted orderDate for the header instead of deriving a UTC date from
+  // createdAt, which can mislabel late-evening orders.
   const groupedOrders = orders.reduce((acc, order) => {
-    // Fallback to today's date if createdAt is missing for some reason
-    const orderDate = order.createdAt ? new Date(order.createdAt) : new Date();
-    const dateKey = orderDate.toISOString().split('T')[0]; // Creates a "YYYY-MM-DD" string
+    const dateKey = order.orderDate;
     
     if (!acc[dateKey]) {
       acc[dateKey] = [];
@@ -61,7 +61,7 @@ function Orders() {
     return acc;
   }, {});
 
-  // Sort the dates from Newest to Oldest
+  // This normally contains a single group, but remains safe around a day change.
   const sortedDates = Object.keys(groupedOrders).sort((a, b) => new Date(b) - new Date(a));
 
   return (
@@ -90,7 +90,7 @@ function Orders() {
             </div>
           ) : (
             sortedDates.map((dateKey) => {
-              const displayDate = new Date(dateKey).toLocaleDateString("en-IN", {
+              const displayDate = new Date(`${dateKey}T00:00:00`).toLocaleDateString("en-IN", {
                 weekday: "long",
                 year: "numeric",
                 month: "long",

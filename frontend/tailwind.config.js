@@ -6,6 +6,16 @@ export default {
   ],
   theme: {
     extend: {
+      colors: {
+        cafe: {
+          bg: "var(--cafe-bg)",
+          surface: "var(--cafe-surface)",
+          elevated: "var(--cafe-elevated)",
+          text: "var(--cafe-text)",
+          muted: "var(--cafe-muted)",
+          border: "var(--cafe-border)",
+        },
+      },
       fontFamily: {
         sans: ['Outfit', 'sans-serif'],
       }

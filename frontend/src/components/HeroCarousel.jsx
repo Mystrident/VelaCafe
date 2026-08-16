@@ -59,7 +59,7 @@ function HeroCarousel() {
 
       {/* LEFT SIDE: Animated Text */}
       <div className="w-full md:w-1/2 space-y-5 md:space-y-6">
-        <h1 className="text-5xl md:text-6xl lg:text-[5.5rem] font-black text-[#3a1710] leading-[1.1] tracking-tight">
+        <h1 className="text-5xl md:text-6xl lg:text-[5.5rem] font-black text-cafe-text leading-[1.1] tracking-tight">
           <SplitText text="Order Food," delay={0.1} />
           <br />
           <SplitText text="Skip The Wait." delay={0.3} className="text-orange-500" />
@@ -69,7 +69,7 @@ function HeroCarousel() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="text-[#8b5e3c] text-base md:text-lg font-medium max-w-lg leading-relaxed"
+          className="text-cafe-muted text-base md:text-lg font-medium max-w-lg leading-relaxed"
         >
           @Velaa Cafe, days turn into memories...<br />
           Pre-Order your favorites and experience the joy of hassle-free dining.

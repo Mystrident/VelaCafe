@@ -91,6 +91,15 @@ function AdminNavbar() {
           Live Orders
         </Link>
 
+        <Link
+          to="/previous-orders"
+          className={`font-bold transition-colors ${
+            isActive("/previous-orders") ? "text-orange-500" : "text-gray-500 hover:text-[#3a1710]"
+          }`}
+        >
+          Previous Orders
+        </Link>
+
         <button
           onClick={logout}
           className="

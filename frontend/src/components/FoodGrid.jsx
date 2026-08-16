@@ -45,14 +45,14 @@ function FoodGrid({ items, cart, increaseQty, decreaseQty }) {
           <motion.div
             variants={cardVariants}
             key={item._id}
-            className={`bg-white rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 flex flex-col group transition-all duration-300 ${
+            className={`bg-cafe-surface rounded-2xl md:rounded-[2rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-cafe-border flex flex-col group transition-all duration-300 ${
               isOutOfStock
                 ? "opacity-60 grayscale-[0.3]"
                 : "hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1"
             }`}
           >
             {/* Image Section */}
-            <div className="relative h-40 min-[375px]:h-28 sm:h-36 md:h-48 w-full bg-gray-50 overflow-hidden">
+            <div className="relative h-40 min-[375px]:h-28 sm:h-36 md:h-48 w-full bg-cafe-elevated overflow-hidden">
               {item.image ? (
                 <img
                   src={
@@ -86,9 +86,9 @@ function FoodGrid({ items, cart, increaseQty, decreaseQty }) {
             </div>
 
             {/* Content Section */}
-            <div className="p-4 min-[375px]:p-3 md:p-5 flex flex-col flex-grow z-10 bg-white">
+            <div className="p-4 min-[375px]:p-3 md:p-5 flex flex-col flex-grow z-10 bg-cafe-surface">
               <div className="flex justify-between items-start mb-2 gap-2">
-                <h3 className="text-base min-[375px]:text-sm md:text-lg font-black text-[#3a1710] leading-tight line-clamp-2">
+                <h3 className="text-base min-[375px]:text-sm md:text-lg font-black text-cafe-text leading-tight line-clamp-2">
                   {item.name}
                 </h3>
                 <span className="text-orange-500 font-black text-base min-[375px]:text-sm md:text-lg shrink-0">
@@ -109,7 +109,7 @@ function FoodGrid({ items, cart, increaseQty, decreaseQty }) {
                   <button
                     onClick={() => increaseQty(item._id)}
                     disabled={isOutOfStock}
-                    className="w-full bg-orange-50 text-orange-600 font-bold py-3 min-[375px]:py-2 md:py-3 rounded-xl text-sm min-[375px]:text-xs md:text-sm hover:bg-orange-500 hover:text-white transition-all duration-300 disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-100 border border-orange-100 active:scale-[0.98]"
+                    className="w-full bg-orange-50 text-orange-600 font-bold py-3 min-[375px]:py-2 md:py-3 rounded-xl text-sm min-[375px]:text-xs md:text-sm hover:bg-orange-500 hover:text-white transition-all duration-300 disabled:bg-cafe-elevated disabled:text-cafe-muted disabled:border-cafe-border border border-orange-100 active:scale-[0.98]"
                   >
                     Add to Cart
                   </button>

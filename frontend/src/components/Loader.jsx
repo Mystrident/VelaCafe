@@ -21,7 +21,7 @@ function Loader() {
           />
         ))}
       </div>
-      <p className="mt-6 text-[#8b5e3c] font-bold tracking-widest uppercase text-sm animate-pulse">
+      <p className="mt-6 text-cafe-muted font-bold tracking-widest uppercase text-sm animate-pulse">
         Fetching Fresh Menu...
       </p>
     </div>

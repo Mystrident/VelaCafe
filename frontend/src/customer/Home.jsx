@@ -188,7 +188,7 @@ function Home() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="bg-[#fdfbf7] min-h-screen font-sans selection:bg-orange-200 selection:text-orange-900"
+      className="bg-cafe-bg min-h-screen font-sans text-cafe-text selection:bg-orange-200 selection:text-orange-900"
     >
       <Navbar />
       <HeroCarousel />
@@ -197,27 +197,27 @@ function Home() {
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
-            <h1 className="text-4xl md:text-5xl font-black text-[#3a1710] tracking-tight">
+            <h1 className="text-4xl md:text-5xl font-black text-cafe-text tracking-tight">
               Our Menu
             </h1>
-            <p className="mt-3 text-[#8b5e3c] text-lg font-medium">
+            <p className="mt-3 text-cafe-muted text-lg font-medium">
               Freshly prepared café favourites waiting for you.
             </p>
           </div>
         </div>
 
         {/* Search & Scrollable Filter Chips */}
-        <div className="mb-12 sticky top-20 z-40 bg-[#fdfbf7]/90 backdrop-blur-md py-4 -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="mb-12 sticky top-20 z-40 bg-cafe-bg/90 backdrop-blur-md py-4 -mx-4 px-4 md:mx-0 md:px-0">
           
           {/* Search Bar */}
-          <div className="relative flex items-center bg-white border border-gray-100 rounded-[1.25rem] px-4 py-3.5 shadow-sm focus-within:border-orange-300 focus-within:ring-4 focus-within:ring-orange-500/10 transition-all mb-4">
-            <HiSearch className="text-gray-400 text-xl shrink-0" />
+          <div className="relative flex items-center bg-cafe-surface border border-cafe-border rounded-[1.25rem] px-4 py-3.5 shadow-sm focus-within:border-orange-300 focus-within:ring-4 focus-within:ring-orange-500/10 transition-all mb-4">
+            <HiSearch className="text-cafe-muted text-xl shrink-0" />
             <input 
               type="text" 
               placeholder="Search dishes..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-transparent outline-none ml-3 text-[#3a1710] font-bold placeholder:text-gray-400 placeholder:font-medium text-sm md:text-base"
+              className="w-full bg-transparent outline-none ml-3 text-cafe-text font-bold placeholder:text-cafe-muted placeholder:font-medium text-sm md:text-base"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery("")} className="text-gray-300 hover:text-gray-500 font-bold ml-2">✕</button>
@@ -226,7 +226,7 @@ function Home() {
 
           {/* Scrollable Filter Chips */}
           <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-2">
-            <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-xl text-gray-500 shrink-0">
+            <div className="flex items-center gap-2 px-3 py-2 bg-cafe-elevated rounded-xl text-cafe-muted shrink-0">
               <HiOutlineAdjustments className="text-lg" />
               <span className="text-xs font-bold uppercase tracking-wider">Filters</span>
             </div>
@@ -241,7 +241,7 @@ function Home() {
                     shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold transition-all border
                     ${isActive 
                       ? "bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20" 
-                      : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                      : "bg-cafe-surface text-cafe-muted border-cafe-border hover:bg-cafe-elevated"
                     }
                   `}
                 >
@@ -271,10 +271,10 @@ function Home() {
                   key={category}
                 >
                   {/* Category Header */}
-                  <h2 className="text-2xl md:text-3xl font-black text-[#3a1710] mb-6 flex items-center gap-3">
+                  <h2 className="text-2xl md:text-3xl font-black text-cafe-text mb-6 flex items-center gap-3">
                     <span className="text-3xl">{categoryIcons[category]}</span>
                     {category}
-                    <span className="text-sm font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-lg ml-2">
+                    <span className="text-sm font-bold text-cafe-muted bg-cafe-elevated px-3 py-1 rounded-lg ml-2">
                       {itemsInCategory.length}
                     </span>
                   </h2>
@@ -293,8 +293,8 @@ function Home() {
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-5xl mb-4">🔍</div>
-            <h3 className="text-2xl font-black text-[#3a1710]">No dishes found</h3>
-            <p className="text-gray-500 font-medium mt-2">Try removing some filters or adjusting your search.</p>
+            <h3 className="text-2xl font-black text-cafe-text">No dishes found</h3>
+            <p className="text-cafe-muted font-medium mt-2">Try removing some filters or adjusting your search.</p>
             <button 
               onClick={() => { setSearchQuery(""); setActiveFilters([]); }}
               className="mt-6 bg-orange-50 text-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-100 transition-colors"

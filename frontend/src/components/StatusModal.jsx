@@ -50,7 +50,10 @@ function StatusModal({
 
     syncStatus();
 
-    const socket = io(import.meta.env.VITE_API_URL.replace("/api", ""));
+    const customerToken = localStorage.getItem("customerToken");
+    const socket = io(import.meta.env.VITE_API_URL.replace("/api", ""), {
+      auth: { token: customerToken },
+    });
 
     // Fires on the initial connection AND every reconnect, so a dropped
     // connection that comes back doesn't leave the room-join or the
@@ -107,29 +110,29 @@ function StatusModal({
           exit={{ y: 50, opacity: 0, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="
-            bg-white/95
+            bg-cafe-surface/95
             backdrop-blur-md
             rounded-[2rem]
             shadow-[0_20px_50px_rgb(0,0,0,0.15)]
             p-6
             w-[340px]
             border
-            border-white
+            border-cafe-border
           "
         >
           <div className="flex justify-between items-center mb-4">
             <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
+              <p className="text-xs font-bold text-cafe-muted uppercase tracking-widest mb-1">
                 Live Tracking
               </p>
-              <h2 className="text-2xl font-black text-[#3a1710]">
+              <h2 className="text-2xl font-black text-cafe-text">
                 Order #{String(orderNumber).padStart(3, "0")}
               </h2>
             </div>
 
             <button
               onClick={handleCloseClick}
-              className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors font-bold"
+              className="w-8 h-8 rounded-full bg-cafe-elevated flex items-center justify-center text-cafe-muted hover:bg-cafe-border transition-colors font-bold"
               title={
                 status === "Completed" ? "Close Order" : "Minimize Tracker"
               }
@@ -139,8 +142,8 @@ function StatusModal({
           </div>
 
  <div className="mb-4">
-  <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
-    <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">
+  <div className="bg-cafe-elevated border border-cafe-border rounded-2xl p-4">
+    <p className="text-xs font-bold uppercase tracking-widest text-cafe-muted mb-3">
       Order Items
     </p>
 
@@ -148,9 +151,9 @@ function StatusModal({
       {items.map((item, index) => (
         <div
           key={index}
-          className="flex items-center justify-between bg-white rounded-xl px-4 py-3 shadow-sm"
+          className="flex items-center justify-between bg-cafe-surface rounded-xl px-4 py-3 shadow-sm"
         >
-          <span className="font-semibold text-[#3a1710]">
+          <span className="font-semibold text-cafe-text">
             {item.name}
           </span>
 
@@ -185,7 +188,7 @@ function StatusModal({
               <p className="text-sm font-semibold text-green-600">
                 Your food is hot and ready!
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-cafe-muted mt-1">
                 Please pick it up at the counter.
               </p>
             </div>
@@ -203,7 +206,7 @@ function StatusModal({
             relative
             w-16
             h-16
-            bg-white
+            bg-cafe-surface
             rounded-full
             shadow-[0_10px_30px_rgb(0,0,0,0.15)]
             border-2

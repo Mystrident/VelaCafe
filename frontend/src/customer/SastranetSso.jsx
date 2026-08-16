@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import { saveCustomerProfile } from "../utils/customerProfile";
 
 function SastranetSso() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ function SastranetSso() {
       try {
         const response = await api.post("/api/auth/sastranet", { token });
         localStorage.setItem("customerToken", response.data.token);
+        saveCustomerProfile(response.data.user);
         window.dispatchEvent(new Event("customer-auth-changed"));
         navigate("/", { replace: true });
       } catch (error) {
@@ -33,8 +35,8 @@ function SastranetSso() {
   }, [navigate]);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#fffaf5] px-6 text-center">
-      <p className="text-[#4b1e14] font-semibold">{message}</p>
+    <main className="min-h-screen flex items-center justify-center bg-cafe-bg px-6 text-center">
+      <p className="text-cafe-text font-semibold">{message}</p>
     </main>
   );
 }

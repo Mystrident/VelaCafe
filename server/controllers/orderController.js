@@ -1,11 +1,59 @@
 const Order = require("../models/Order");
 
+const getKolkataDate = () =>
+  new Date()
+    .toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+    .split("/")
+    .reverse()
+    .join("-");
+
+const getPagination = (query) => {
+  const pageValue = Number.parseInt(query.page, 10);
+  const limitValue = Number.parseInt(query.limit, 10);
+  const page = Number.isInteger(pageValue) && pageValue > 0 ? pageValue : 1;
+  const limit =
+    Number.isInteger(limitValue) && limitValue > 0
+      ? Math.min(limitValue, 100)
+      : 20;
+
+  return { page, limit, skip: (page - 1) * limit };
+};
+
 const getOrders = async (req, res) => {
   try {
-    const orders = await Order.find().sort({
+    const orders = await Order.find({ orderDate: getKolkataDate() }).sort({
       createdAt: -1,
     });
     res.json(orders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
+    });
+  }
+};
+
+const getOrderHistory = async (req, res) => {
+  try {
+    const { page, limit, skip } = getPagination(req.query);
+    const [orders, total] = await Promise.all([
+      Order.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Order.countDocuments(),
+    ]);
+
+    res.json({
+      orders,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -84,8 +132,41 @@ const getCustomerOrderStatus = async (req, res) => {
   }
 };
 
+const getCustomerOrderHistory = async (req, res) => {
+  try {
+    const { page, limit, skip } = getPagination(req.query);
+    const filter = { userId: req.user.id };
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .select(
+          "orderDate pickupTime items totalAmount orderNumber paymentStatus status createdAt",
+        )
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Order.countDocuments(filter),
+    ]);
+
+    res.json({
+      orders,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
+    });
+  }
+};
+
 module.exports = {
   getOrders,
+  getOrderHistory,
   updateOrderStatus,
   getCustomerOrderStatus,
+  getCustomerOrderHistory,
 };
