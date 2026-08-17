@@ -5,7 +5,7 @@ import { saveCustomerProfile } from "../utils/customerProfile";
 
 function SastranetSso() {
   const navigate = useNavigate();
-  const [message, setMessage] = useState("Signing you in through Sastranet…");
+  const [message, setMessage] = useState("Signing you in through sastranet…");
 
   useEffect(() => {
     const signIn = async () => {
@@ -43,7 +43,7 @@ function SastranetSso() {
     <main className="min-h-screen flex items-center justify-center bg-cafe-bg px-6 text-center">
       <div className="flex flex-col items-center">
         <img
-          src="/sastranet.jpeg"
+          src="/SN_outline_vector.svg"
           alt="Sastranet"
           className="mb-5 h-20 w-20 object-contain"
         />
