@@ -11,8 +11,7 @@ function SastranetSso() {
     const signIn = async () => {
       const token = new URLSearchParams(window.location.search).get("token");
 
-      // Remove the sensitive SSO token from the address bar before any
-      // request, redirect, or user interaction can leave it in the history.
+      // Remove the sensitive SSO token from the address bar.
       window.history.replaceState({}, document.title, "/sso");
 
       if (!token) {
@@ -22,10 +21,12 @@ function SastranetSso() {
 
       try {
         const response = await api.post("/api/auth/sastranet", { token });
+
         localStorage.setItem("customerToken", response.data.token);
         localStorage.setItem("sastranetSession", "true");
+
         saveCustomerProfile(response.data.user);
-        <p className="text-cafe-text font-semibold">{message}</p>;
+
         window.dispatchEvent(new Event("customer-auth-changed"));
         navigate("/", { replace: true });
       } catch (error) {
@@ -40,7 +41,7 @@ function SastranetSso() {
   }, [navigate]);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-cafe-bg px-6 text-center">
+    <main className="min-h-screen flex items-center justify-center bg-white px-6 text-center">
       <div className="flex flex-col items-center">
         <img
           src="/SN_outline_vector.svg"
@@ -48,7 +49,7 @@ function SastranetSso() {
           className="mb-5 h-20 w-20 object-contain"
         />
 
-        <p className="text-cafe-text font-semibold">{message}</p>
+        <p className="font-semibold text-black">{message}</p>
       </div>
     </main>
   );
