@@ -23,7 +23,9 @@ const loadRazorpayScript = (src) => {
 const isTokenExpired = (token) => {
   try {
     const payloadBase64 = token.split(".")[1];
-    const payload = JSON.parse(atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/")));
+    const payload = JSON.parse(
+      atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/")),
+    );
     if (!payload.exp) return false;
     return Date.now() >= payload.exp * 1000;
   } catch {
@@ -50,7 +52,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
   const orderSummary = items.filter((item) => cart[item._id] > 0);
   const totalAmountToPay = orderSummary.reduce(
     (total, item) => total + item.price * cart[item._id],
-    0
+    0,
   );
 
   const handleGoogleSuccess = async (credentialResponse) => {
@@ -84,14 +86,18 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
 
       // NEW: Strict frontend validation for time bounds
       if (pickupTime < "08:45" || pickupTime > "18:00") {
-        alert("Sorry, pickup times are only available between 08:45 AM and 06:00 PM.");
+        alert(
+          "Sorry, pickup times are only available between 08:45 AM and 06:00 PM.",
+        );
         return;
       }
 
       setLoading(true);
 
       // Load Razorpay script securely before opening the modal
-      const scriptLoaded = await loadRazorpayScript("https://checkout.razorpay.com/v1/checkout.js");
+      const scriptLoaded = await loadRazorpayScript(
+        "https://checkout.razorpay.com/v1/checkout.js",
+      );
       if (!scriptLoaded) {
         alert("Razorpay SDK failed to load. Are you online?");
         setLoading(false);
@@ -119,7 +125,10 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
           localStorage.removeItem("customerToken");
           window.dispatchEvent(new Event("customer-auth-changed"));
           setCustomerToken(null);
-          alert(error.response?.data?.message || "Session expired. Please login again.");
+          alert(
+            error.response?.data?.message ||
+              "Session expired. Please login again.",
+          );
           setLoading(false);
           return;
         }
@@ -135,6 +144,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
         name: "VELAA CAFE",
         description: "Food Order Payment",
         order_id: razorpayOrder.id,
+        webview_intent: true,
         handler: async function (response) {
           try {
             const verifyRes = await api.post(
@@ -186,7 +196,11 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
       razorpay.open();
     } catch (error) {
       console.log(error);
-      alert(error.response?.data?.message || error.response?.data?.errors?.[0]?.msg || "Something went wrong");
+      alert(
+        error.response?.data?.message ||
+          error.response?.data?.errors?.[0]?.msg ||
+          "Something went wrong",
+      );
     } finally {
       setLoading(false);
     }
@@ -209,11 +223,15 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         className="bg-cafe-surface p-8 md:p-10 rounded-[2.5rem] shadow-2xl w-full max-w-md relative z-10 border border-cafe-border max-h-[90vh] overflow-y-auto scrollbar-hide"
       >
-        <h1 className="text-3xl font-black mb-6 text-cafe-text tracking-tight">Checkout</h1>
+        <h1 className="text-3xl font-black mb-6 text-cafe-text tracking-tight">
+          Checkout
+        </h1>
 
         {!customerToken ? (
           <div className="flex flex-col items-center gap-4 mb-2">
-            <p className="text-cafe-muted font-medium text-center">Please verify your <b>SASTRA</b> email to continue.</p>
+            <p className="text-cafe-muted font-medium text-center">
+              Please verify your <b>SASTRA</b> email to continue.
+            </p>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={() => alert("Google Login Failed")}
@@ -226,13 +244,20 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
             </div>
 
             <div className="bg-cafe-elevated p-5 rounded-2xl border border-cafe-border mb-6">
-              <h3 className="text-cafe-text font-black mb-4 uppercase tracking-wider text-xs">Order Summary</h3>
+              <h3 className="text-cafe-text font-black mb-4 uppercase tracking-wider text-xs">
+                Order Summary
+              </h3>
               <div className="space-y-3 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
                 {orderSummary.map((item) => (
-                  <div key={item._id} className="flex justify-between items-center text-sm font-medium text-cafe-muted">
+                  <div
+                    key={item._id}
+                    className="flex justify-between items-center text-sm font-medium text-cafe-muted"
+                  >
                     <span className="truncate max-w-[200px]">
                       {item.name}
-                      <span className="text-orange-500 font-bold ml-2">x{cart[item._id]}</span>
+                      <span className="text-orange-500 font-bold ml-2">
+                        x{cart[item._id]}
+                      </span>
                     </span>
                     <span className="text-cafe-text font-bold shrink-0">
                       ₹{item.price * cart[item._id]}
@@ -241,8 +266,12 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
                 ))}
               </div>
               <div className="flex justify-between items-center mt-4 pt-4 border-t border-cafe-border">
-                <span className="font-bold text-cafe-muted uppercase text-xs tracking-wider">Total to Pay</span>
-                <span className="text-2xl font-black text-orange-500">₹{totalAmountToPay}</span>
+                <span className="font-bold text-cafe-muted uppercase text-xs tracking-wider">
+                  Total to Pay
+                </span>
+                <span className="text-2xl font-black text-orange-500">
+                  ₹{totalAmountToPay}
+                </span>
               </div>
             </div>
 
@@ -267,7 +296,9 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
                 disabled={loading}
                 className="bg-orange-500 text-white px-5 py-4 rounded-2xl w-full font-bold text-lg hover:bg-orange-600 transition-all shadow-lg shadow-orange-500/20 disabled:opacity-50 active:scale-[0.98]"
               >
-                {loading ? "Processing..." : `Pay ₹${totalAmountToPay} Securely`}
+                {loading
+                  ? "Processing..."
+                  : `Pay ₹${totalAmountToPay} Securely`}
               </button>
             </div>
           </>
