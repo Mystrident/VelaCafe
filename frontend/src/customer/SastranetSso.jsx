@@ -23,11 +23,16 @@ function SastranetSso() {
       try {
         const response = await api.post("/api/auth/sastranet", { token });
         localStorage.setItem("customerToken", response.data.token);
+        localStorage.setItem("sastranetSession", "true");
         saveCustomerProfile(response.data.user);
+        <p className="text-cafe-text font-semibold">{message}</p>;
         window.dispatchEvent(new Event("customer-auth-changed"));
         navigate("/", { replace: true });
       } catch (error) {
-        setMessage(error.response?.data?.message || "Sastranet sign in failed. Please return to Sastranet and try again.");
+        setMessage(
+          error.response?.data?.message ||
+            "Sastranet sign in failed. Please return to Sastranet and try again.",
+        );
       }
     };
 
@@ -36,7 +41,15 @@ function SastranetSso() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-cafe-bg px-6 text-center">
-      <p className="text-cafe-text font-semibold">{message}</p>
+      <div className="flex flex-col items-center">
+        <img
+          src="/sastranet.jpeg"
+          alt="Sastranet"
+          className="mb-5 h-20 w-20 object-contain"
+        />
+
+        <p className="text-cafe-text font-semibold">{message}</p>
+      </div>
     </main>
   );
 }
