@@ -13,10 +13,12 @@ import PreviousOrders from "./admin/PreviousOrders";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerProtectedRoute from "./components/CustomerProtectedRoute";
+import OfferPopup from "./components/OfferPopup";
 
 function App() {
   return (
     <BrowserRouter>
+      <OfferPopup />
       <Routes>
         <Route path="/" element={<Home />} />
 

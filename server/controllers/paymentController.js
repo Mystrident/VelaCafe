@@ -97,12 +97,19 @@ const createRazorpayOrder = async (req, res) => {
       }
 
       reservedSoFar.push({ itemId: item._id, quantity });
-      totalAmount += item.price * quantity;
+      const effectivePrice =
+        item.discountedPrice !== null &&
+        item.discountedPrice !== undefined &&
+        item.discountedPrice < item.price
+          ? item.discountedPrice
+          : item.price;
+      totalAmount += effectivePrice * quantity;
       validatedItems.push({
         itemId: item._id,
         name: item.name,
         quantity,
-        price: item.price,
+        price: effectivePrice,
+        originalPrice: item.price,
         stockAfterReservation: item.stock,
       });
     }

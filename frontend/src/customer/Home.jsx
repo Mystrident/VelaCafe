@@ -21,11 +21,16 @@ function Home() {
 
   // Search and Multi-Filter State
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilters, setActiveFilters] = useState([]); 
+  const [activeFilters, setActiveFilters] = useState(() =>
+    new URLSearchParams(window.location.search).get("filter") === "offers"
+      ? ["Offer Items"]
+      : [],
+  );
 
 // Replace your existing availableFilters array
   const availableFilters = [
     "Available Only", 
+    "Offer Items",
     "Beverages", 
     "Puffs", 
     "Rolls", 
@@ -52,6 +57,7 @@ function Home() {
     "Paneer": "🧀",
     "Healthy & Groceries": "🥗",
     "Traditional Snacks": "🥮",
+    "Offer Items": "🏷️",
     "Uncategorized": "🍽️"
   };
   
@@ -102,6 +108,13 @@ function Home() {
         )
       );
     });
+    socket.on("discount-updated", ({ itemId, discountedPrice }) => {
+      setItems((prevItems) =>
+        prevItems.map((item) =>
+          item._id === itemId ? { ...item, discountedPrice } : item
+        )
+      );
+    });
 
     return () => socket.disconnect();
   }, []);
@@ -148,7 +161,12 @@ function Home() {
     });
   };
   
-  const totalAmount = items.reduce((total, item) => total + item.price * (cart[item._id] || 0), 0);
+  const totalAmount = items.reduce((total, item) => {
+    const price = item.discountedPrice && item.discountedPrice < item.price
+      ? item.discountedPrice
+      : item.price;
+    return total + price * (cart[item._id] || 0);
+  }, 0);
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
 
   // Toggle multiple filters
@@ -172,8 +190,15 @@ function Home() {
     }
 
     // Filter: Specific Categories (If category filters are selected, it must match one)
-    const categoryFilters = activeFilters.filter(f => f !== "Available Only");
+    const categoryFilters = activeFilters.filter(f => f !== "Available Only" && f !== "Offer Items");
     const itemCategory = item.category || "Uncategorized"; // Safely grab category from DB
+
+    if (
+      activeFilters.includes("Offer Items") &&
+      !(item.discountedPrice && item.discountedPrice < item.price)
+    ) {
+      matchesFilter = false;
+    }
     
     if (categoryFilters.length > 0 && !categoryFilters.includes(itemCategory)) {
       matchesFilter = false;

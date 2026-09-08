@@ -50,8 +50,12 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
   });
 
   const orderSummary = items.filter((item) => cart[item._id] > 0);
+  const getEffectivePrice = (item) =>
+    item.discountedPrice && item.discountedPrice < item.price
+      ? item.discountedPrice
+      : item.price;
   const totalAmountToPay = orderSummary.reduce(
-    (total, item) => total + item.price * cart[item._id],
+    (total, item) => total + getEffectivePrice(item) * cart[item._id],
     0,
   );
 
@@ -260,7 +264,7 @@ function CheckoutModal({ items, cart, closeModal, clearCart, onOrderPlaced }) {
                       </span>
                     </span>
                     <span className="text-cafe-text font-bold shrink-0">
-                      ₹{item.price * cart[item._id]}
+                      ₹{getEffectivePrice(item) * cart[item._id]}
                     </span>
                   </div>
                 ))}

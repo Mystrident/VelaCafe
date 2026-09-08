@@ -6,6 +6,7 @@ const {
   deleteItem,
   updateStock, // Import the new function
   updatePrice,
+  updateDiscountedPrice,
   toggleAvailability,
   migrateAndCleanItems
 } = require("../controllers/itemController");
@@ -22,6 +23,7 @@ router.post("/", protect, upload.single("image"), validateItem, addItem);
 router.delete("/:id", protect, validateObjectId, deleteItem);
 router.patch("/:id/stock", protect, validateObjectId, updateStock); // New Route for updating stock
 router.patch("/:id/price", protect, validateObjectId, validatePrice, updatePrice);
+router.patch("/:id/discount", protect, validateObjectId, updateDiscountedPrice);
 router.patch("/:id", protect, validateObjectId, toggleAvailability);
 router.post("/optimize-db", protect, migrateAndCleanItems);
 

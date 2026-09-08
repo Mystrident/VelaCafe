@@ -13,6 +13,9 @@ function Admin() {
   const [image, setImage] = useState(null);
   
   const [items, setItems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [offerDrafts, setOfferDrafts] = useState({});
+  const [editingOfferId, setEditingOfferId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
 
@@ -31,6 +34,13 @@ function Admin() {
       setItems((prevItems) =>
         prevItems.map((item) =>
           item._id === itemId ? { ...item, price: newPrice } : item
+        )
+      );
+    });
+    socket.on("discount-updated", ({ itemId, discountedPrice }) => {
+      setItems((prevItems) =>
+        prevItems.map((item) =>
+          item._id === itemId ? { ...item, discountedPrice } : item
         )
       );
     });
@@ -113,9 +123,56 @@ function Admin() {
       fetchItems();
     } catch (error) {
       console.log(error);
-      alert(error.response?.data?.errors?.[0]?.msg || "Failed to update price");
+      alert(error.response?.data?.message || error.response?.data?.errors?.[0]?.msg || "Failed to update price");
     }
   };
+
+  const startOfferEdit = (item) => {
+    setOfferDrafts((prev) => ({
+      ...prev,
+      [item._id]: item.discountedPrice ?? "",
+    }));
+    setEditingOfferId(item._id);
+  };
+
+  const cancelOfferEdit = (id) => {
+    setEditingOfferId(null);
+    setOfferDrafts((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const saveOffer = async (item) => {
+    const draft = offerDrafts[item._id];
+    const discountedPrice = Number(draft);
+    if (!Number.isFinite(discountedPrice) || discountedPrice < 1 || discountedPrice >= item.price) {
+      alert("Offer price must be at least ₹1 and lower than the original price");
+      return;
+    }
+
+    try {
+      await api.patch(`/api/items/${item._id}/discount`, { discountedPrice });
+      cancelOfferEdit(item._id);
+      fetchItems();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to save offer");
+    }
+  };
+
+  const removeOffer = async (item) => {
+    try {
+      await api.patch(`/api/items/${item._id}/discount`, { discountedPrice: null });
+      fetchItems();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to remove offer");
+    }
+  };
+
+  const filteredItems = items.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+  );
 
   return (
     <div className="bg-[#fdfbf7] min-h-screen pb-20">
@@ -167,6 +224,15 @@ function Admin() {
         </motion.div>
 
         <h2 className="text-2xl font-black mb-8 text-[#3a1710]">Current Menu</h2>
+        <div className="mb-8">
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search menu items..."
+            className="w-full max-w-md bg-white border border-gray-100 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-orange-400 shadow-[0_8px_30px_rgb(0,0,0,0.04)] font-medium"
+          />
+        </div>
         
         {isFetching ? (
           <Loader />
@@ -180,7 +246,7 @@ function Admin() {
             }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
           >
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <motion.div
                 variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
                 key={item._id}
@@ -207,12 +273,45 @@ function Admin() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3 mt-1">
-                    <p className="text-orange-500 font-black text-xl">₹{item.price}</p>
+                  <div className="flex flex-wrap items-center gap-3 mt-1">
+                    {item.discountedPrice ? (
+                      <>
+                        <p className="text-gray-400 font-bold text-lg line-through">₹{item.price}</p>
+                        <p className="text-orange-500 font-black text-xl">₹{item.discountedPrice}</p>
+                      </>
+                    ) : (
+                      <p className="text-orange-500 font-black text-xl">₹{item.price}</p>
+                    )}
                     <button onClick={() => handleUpdatePrice(item._id, item.price, item.name)} className="text-orange-500 text-[10px] font-bold hover:text-orange-700 transition-colors uppercase tracking-wider">
                       Edit Price
                     </button>
                   </div>
+                  {editingOfferId === item._id ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max={item.price - 1}
+                        value={offerDrafts[item._id] ?? ""}
+                        onChange={(e) => setOfferDrafts((prev) => ({ ...prev, [item._id]: e.target.value }))}
+                        placeholder="Offer price"
+                        className="w-28 rounded-lg border border-orange-200 px-2 py-1 text-sm outline-none focus:ring-2 focus:ring-orange-400"
+                      />
+                      <button onClick={() => saveOffer(item)} className="text-green-600 text-xs font-bold">Save</button>
+                      <button onClick={() => cancelOfferEdit(item._id)} className="text-gray-500 text-xs font-bold">Cancel</button>
+                    </div>
+                  ) : (
+                    <div className="mt-2 flex gap-3">
+                      <button onClick={() => startOfferEdit(item)} className="text-orange-500 text-[10px] font-bold hover:text-orange-700 transition-colors uppercase tracking-wider">
+                        {item.discountedPrice ? "Edit Offer" : "Create Offer"}
+                      </button>
+                      {item.discountedPrice && (
+                        <button onClick={() => removeOffer(item)} className="text-red-500 text-[10px] font-bold hover:text-red-700 transition-colors uppercase tracking-wider">
+                          Remove Offer
+                        </button>
+                      )}
+                    </div>
+                  )}
                   
                   <button onClick={() => deleteItem(item._id)} className="mt-auto pt-6 text-red-500 font-bold hover:text-red-700 transition-colors text-left">
                     Remove Item
@@ -221,6 +320,11 @@ function Admin() {
               </motion.div>
             ))}
           </motion.div>
+        )}
+        {!isFetching && filteredItems.length === 0 && (
+          <div className="bg-white rounded-[2rem] border border-gray-100 p-10 text-center text-gray-500 font-medium">
+            No menu items found.
+          </div>
         )}
       </div>
     </div>

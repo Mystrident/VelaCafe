@@ -163,7 +163,18 @@ const updatePrice = async (req, res) => {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    item.price = Number(req.body.price);
+    const newPrice = Number(req.body.price);
+    if (
+      item.discountedPrice !== null &&
+      item.discountedPrice !== undefined &&
+      item.discountedPrice >= newPrice
+    ) {
+      return res.status(400).json({
+        message: "Original price must be higher than the current offer price",
+      });
+    }
+
+    item.price = newPrice;
     await item.save();
 
     const io = req.app.get("io");
@@ -171,6 +182,52 @@ const updatePrice = async (req, res) => {
       io.emit("price-updated", {
         itemId: item._id,
         newPrice: item.price,
+      });
+    }
+
+    res.json(item);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
+    });
+  }
+};
+
+const updateDiscountedPrice = async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.id);
+
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    const value = req.body.discountedPrice;
+    if (value === null || value === "") {
+      item.discountedPrice = null;
+    } else {
+      const discountedPrice = Number(value);
+      if (
+        !Number.isFinite(discountedPrice) ||
+        discountedPrice < 1 ||
+        discountedPrice >= item.price ||
+        discountedPrice > 5000
+      ) {
+        return res.status(400).json({
+          message: "Offer price must be between 1 and less than the original price",
+        });
+      }
+      item.discountedPrice = discountedPrice;
+    }
+
+    await item.save();
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("discount-updated", {
+        itemId: item._id,
+        discountedPrice: item.discountedPrice,
       });
     }
 
@@ -208,6 +265,7 @@ module.exports = {
   deleteItem,
   updateStock,
   updatePrice,
+  updateDiscountedPrice,
   toggleAvailability,
   migrateAndCleanItems,
 };

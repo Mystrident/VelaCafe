@@ -91,8 +91,19 @@ function FoodGrid({ items, cart, increaseQty, decreaseQty }) {
                 <h3 className="text-base min-[375px]:text-sm md:text-lg font-black text-cafe-text leading-tight line-clamp-2">
                   {item.name}
                 </h3>
-                <span className="text-orange-500 font-black text-base min-[375px]:text-sm md:text-lg shrink-0">
-                  ₹{item.price}
+                <span className="shrink-0 flex items-center gap-1">
+                  {item.discountedPrice ? (
+                    <>
+                      <span className="text-gray-400 font-bold text-xs line-through">₹{item.price}</span>
+                      <span className="text-orange-500 font-black text-base min-[375px]:text-sm md:text-lg">
+                        ₹{item.discountedPrice}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-orange-500 font-black text-base min-[375px]:text-sm md:text-lg">
+                      ₹{item.price}
+                    </span>
+                  )}
                 </span>
               </div>
 

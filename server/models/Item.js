@@ -14,6 +14,11 @@ const itemSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  discountedPrice: {
+    type: Number,
+    min: 1,
+    default: null,
+  },
   category: { type: String, default: "Uncategorized"},
   image: {
     type: String,
