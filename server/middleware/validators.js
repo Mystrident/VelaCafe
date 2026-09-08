@@ -79,8 +79,27 @@ const validateObjectId = [
   },
 ];
 
+const validatePrice = [
+  body("price")
+    .isFloat({
+      min: 1,
+      max: 5000,
+    })
+    .withMessage("Price must be between 1 and 5000"),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        errors: errors.array(),
+      });
+    }
+    next();
+  },
+];
+
 module.exports = {
   validateOrder,
   validateItem,
   validateObjectId,
+  validatePrice,
 };

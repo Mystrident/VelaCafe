@@ -95,6 +95,13 @@ function Home() {
         return prevCart;
       });
     });
+    socket.on("price-updated", ({ itemId, newPrice }) => {
+      setItems((prevItems) =>
+        prevItems.map((item) =>
+          item._id === itemId ? { ...item, price: newPrice } : item
+        )
+      );
+    });
 
     return () => socket.disconnect();
   }, []);

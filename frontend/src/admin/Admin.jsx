@@ -27,6 +27,13 @@ function Admin() {
         )
       );
     });
+    socket.on("price-updated", ({ itemId, newPrice }) => {
+      setItems((prevItems) =>
+        prevItems.map((item) =>
+          item._id === itemId ? { ...item, price: newPrice } : item
+        )
+      );
+    });
     return () => socket.disconnect();
   }, []);
 
@@ -93,6 +100,20 @@ function Admin() {
     } catch (error) {
       console.log(error);
       alert("Failed to update stock");
+    }
+  };
+
+  const handleUpdatePrice = async (id, currentPrice, itemName) => {
+    const newPrice = window.prompt(`Enter new price for ${itemName}:`, currentPrice);
+    const parsedPrice = Number(newPrice);
+    if (newPrice === null || newPrice === "" || parsedPrice === currentPrice) return;
+
+    try {
+      await api.patch(`/api/items/${id}/price`, { price: parsedPrice });
+      fetchItems();
+    } catch (error) {
+      console.log(error);
+      alert(error.response?.data?.errors?.[0]?.msg || "Failed to update price");
     }
   };
 
@@ -186,7 +207,12 @@ function Admin() {
                     </div>
                   </div>
                   
-                  <p className="text-orange-500 font-black text-xl mt-1">₹{item.price}</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    <p className="text-orange-500 font-black text-xl">₹{item.price}</p>
+                    <button onClick={() => handleUpdatePrice(item._id, item.price, item.name)} className="text-orange-500 text-[10px] font-bold hover:text-orange-700 transition-colors uppercase tracking-wider">
+                      Edit Price
+                    </button>
+                  </div>
                   
                   <button onClick={() => deleteItem(item._id)} className="mt-auto pt-6 text-red-500 font-bold hover:text-red-700 transition-colors text-left">
                     Remove Item

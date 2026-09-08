@@ -155,6 +155,35 @@ const updateStock = async (req, res) => {
   }
 };
 
+const updatePrice = async (req, res) => {
+  try {
+    const item = await Item.findById(req.params.id);
+
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    item.price = Number(req.body.price);
+    await item.save();
+
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("price-updated", {
+        itemId: item._id,
+        newPrice: item.price,
+      });
+    }
+
+    res.json(item);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message:
+        process.env.NODE_ENV === "development" ? error.message : "Server error",
+    });
+  }
+};
+
 const toggleAvailability = async (req, res) => {
   try {
     const item = await Item.findById(req.params.id);
@@ -178,6 +207,7 @@ module.exports = {
   addItem,
   deleteItem,
   updateStock,
+  updatePrice,
   toggleAvailability,
   migrateAndCleanItems,
 };
