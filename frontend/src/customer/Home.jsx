@@ -119,6 +119,15 @@ function Home() {
     return () => socket.disconnect();
   }, []);
 
+  useEffect(() => {
+    if (window.location.hash === "#menu-section") {
+      document.getElementById("menu-section")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, []);
+
   const fetchItems = async () => {
     try {
       const res = await api.get("/api/items");
