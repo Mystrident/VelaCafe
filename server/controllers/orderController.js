@@ -42,9 +42,17 @@ const getOrders = async (req, res) => {
 const getOrderHistory = async (req, res) => {
   try {
     const { page, limit, skip } = getPagination(req.query);
-    const [orders, total] = await Promise.all([
+    const [orders, total, revenueResult] = await Promise.all([
       Order.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
       Order.countDocuments(),
+      Order.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: "$totalAmount" },
+          },
+        },
+      ]),
     ]);
 
     res.json({
@@ -53,6 +61,7 @@ const getOrderHistory = async (req, res) => {
       limit,
       total,
       totalPages: Math.ceil(total / limit),
+      totalRevenue: revenueResult[0]?.totalRevenue || 0,
     });
   } catch (error) {
     console.error(error);
