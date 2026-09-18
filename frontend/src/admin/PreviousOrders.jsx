@@ -57,7 +57,16 @@ function PreviousOrders() {
             <h1 className="text-4xl font-black text-[#3a1710] tracking-tight">Previous Orders</h1>
             <p className="text-gray-500 mt-2 font-medium">Browse every recorded order, including today.</p>
           </div>
-          {history && <div className="bg-white border border-gray-100 rounded-xl px-4 py-2 shadow-sm text-sm font-bold text-[#3a1710]">{history.total} {history.total === 1 ? "order" : "orders"} recorded</div>}
+          {history && (
+            <div className="flex flex-wrap items-center gap-2 text-sm font-bold">
+              <div className="bg-white border border-gray-100 rounded-xl px-4 py-2 shadow-sm text-[#3a1710]">
+                {history.total} {history.total === 1 ? "order" : "orders"} recorded
+              </div>
+              <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-2 shadow-sm text-green-700">
+                Total Revenue: ₹{history.totalRevenue || 0}
+              </div>
+            </div>
+          )}
         </div>
 
         {loading ? <Loader /> : error ? (
