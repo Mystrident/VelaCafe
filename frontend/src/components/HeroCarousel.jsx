@@ -105,15 +105,13 @@ function HeroCarousel() {
             <span className="absolute inset-0 w-full h-full bg-orange-500 origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100" />
             <span className="relative z-10">Order Now</span>
           </button>
-          {isLoggedIn && (
-            <button
-              type="button"
-              onClick={scrollToFeedback}
-              className="feedback-glow-button rounded-2xl px-6 py-4 font-bold text-lg text-[#3a1710] active:scale-[0.98] transition-transform"
-            >
-              Tell us what you think
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={scrollToFeedback}
+            className="feedback-glow-button rounded-2xl px-6 py-4 font-bold text-lg text-[#3a1710] active:scale-[0.98] transition-transform"
+          >
+            Tell us what you think
+          </button>
         </motion.div>
       </div>
 
