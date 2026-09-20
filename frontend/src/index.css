@@ -208,19 +208,6 @@ body::-webkit-scrollbar {
   max-height: 220px;
 }
 
-.vela-chase-click-me {
-  position: absolute;
-  top: calc(100% - 0.75rem);
-  left: 50%;
-  color: #fff7ed;
-  font-family: "Comic Sans MS", "Trebuchet MS", cursive;
-  font-size: clamp(0.9rem, 1.4vw, 1.15rem);
-  font-weight: 700;
-  text-shadow: 0 0 6px #fb923c, 0 0 12px #f97316;
-  transform: translateX(-50%) rotate(-3deg);
-  white-space: nowrap;
-}
-
 /*
  * Start outside the left edge and finish outside the right edge.
  * Restarting the keyframe places each image back at the left, creating
@@ -293,6 +280,21 @@ body::-webkit-scrollbar {
 @media (min-width: 768px) {
   .vela-chase-track {
     height: 17rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .vela-chase-cat {
+    animation-name: velaChaseCatAcrossMobile;
+  }
+}
+
+@keyframes velaChaseCatAcrossMobile {
+  from {
+    transform: translate3d(-110vw, -50%, 0);
+  }
+  to {
+    transform: translate3d(45vw, -50%, 0);
   }
 }
 
