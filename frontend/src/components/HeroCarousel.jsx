@@ -36,6 +36,17 @@ function HeroCarousel() {
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => !!localStorage.getItem("customerToken"),
+  );
+
+  useEffect(() => {
+    const syncAuthenticationState = () => {
+      setIsLoggedIn(!!localStorage.getItem("customerToken"));
+    };
+    window.addEventListener("customer-auth-changed", syncAuthenticationState);
+    return () => window.removeEventListener("customer-auth-changed", syncAuthenticationState);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -49,6 +60,11 @@ function HeroCarousel() {
   const scrollToMenu = () => {
     const section = document.getElementById("menu-section");
     if (section) section.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const scrollToFeedback = () => {
+    window.history.replaceState(null, "", "/#footer");
+    document.getElementById("footer")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -89,6 +105,15 @@ function HeroCarousel() {
             <span className="absolute inset-0 w-full h-full bg-orange-500 origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100" />
             <span className="relative z-10">Order Now</span>
           </button>
+          {isLoggedIn && (
+            <button
+              type="button"
+              onClick={scrollToFeedback}
+              className="feedback-glow-button rounded-2xl px-6 py-4 font-bold text-lg text-[#3a1710] active:scale-[0.98] transition-transform"
+            >
+              Tell us what you think
+            </button>
+          )}
         </motion.div>
       </div>
 

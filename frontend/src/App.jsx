@@ -10,6 +10,7 @@ import Admin from "./admin/Admin";
 
 import Orders from "./admin/Orders";
 import PreviousOrders from "./admin/PreviousOrders";
+import Feedbacks from "./admin/Feedbacks";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerProtectedRoute from "./components/CustomerProtectedRoute";
@@ -58,6 +59,15 @@ function App() {
           element={
             <ProtectedRoute>
               <PreviousOrders />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/feedbacks"
+          element={
+            <ProtectedRoute>
+              <Feedbacks />
             </ProtectedRoute>
           }
         />

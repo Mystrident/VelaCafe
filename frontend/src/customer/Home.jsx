@@ -120,11 +120,14 @@ function Home() {
   }, []);
 
   useEffect(() => {
-    if (window.location.hash === "#menu-section") {
-      document.getElementById("menu-section")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    const targetId = window.location.hash.slice(1);
+    if (targetId) {
+      window.setTimeout(() => {
+        document.getElementById(targetId)?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 0);
     }
   }, []);
 

@@ -24,6 +24,7 @@ const itemRoutes = require("./routes/itemRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const authRoutes = require("./routes/authRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const feedbackRoutes = require("./routes/feedbackRoutes");
 const userAuthRoutes = require("./routes/userAuthRoutes");
 const { razorpayWebhook } = require("./controllers/paymentController");
 
@@ -184,6 +185,8 @@ app.use("/api/admin", authRoutes);
 app.use("/api/auth", userAuthRoutes);
 
 app.use("/api/payment", paymentRoutes);
+
+app.use("/api/feedback", feedbackRoutes);
 
 const PORT = process.env.PORT || 5000;
 

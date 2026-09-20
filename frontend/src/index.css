@@ -21,6 +21,21 @@
   --cafe-border: #4a342c;
 }
 
+.feedback-glow-button {
+  background: linear-gradient(135deg, #fed7aa, #fb923c);
+  box-shadow: 0 0 0 1px rgb(251 146 60 / 35%), 0 0 22px rgb(251 146 60 / 55%);
+  animation: feedbackGlow 2s ease-in-out infinite;
+}
+
+@keyframes feedbackGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 1px rgb(251 146 60 / 35%), 0 0 18px rgb(251 146 60 / 45%);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgb(251 146 60 / 55%), 0 0 30px rgb(251 146 60 / 75%);
+  }
+}
+
 /* 2. Global Base Styles Injection */
 @layer base {
   html, body {

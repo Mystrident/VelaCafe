@@ -152,7 +152,7 @@ function Navbar() {
                 MENU
               </button>
               <button
-                onClick={() => scrollTo("contact-section")}
+                onClick={() => scrollTo("footer")}
                 className="hover:text-orange-500 transition-colors"
               >
                 CONTACT
