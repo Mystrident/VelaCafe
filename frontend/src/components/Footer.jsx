@@ -11,12 +11,23 @@ function Footer() {
   const [status, setStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleDeveloperClick = () => {
+    window.history.replaceState(null, "", "/#developers");
+    document
+      .getElementById("developers")
+      ?.scrollIntoView({ behavior: "smooth" });
+  };
+
   useEffect(() => {
     const syncAuthenticationState = () => {
       setIsLoggedIn(!!localStorage.getItem("customerToken"));
     };
     window.addEventListener("customer-auth-changed", syncAuthenticationState);
-    return () => window.removeEventListener("customer-auth-changed", syncAuthenticationState);
+    return () =>
+      window.removeEventListener(
+        "customer-auth-changed",
+        syncAuthenticationState,
+      );
   }, []);
 
   const handleGoogleSuccess = async (credentialResponse) => {
@@ -46,19 +57,29 @@ function Footer() {
       await api.post(
         "/api/feedback",
         { feedback },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("customerToken")}` } },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("customerToken")}`,
+          },
+        },
       );
       setFeedback("");
       setStatus("Thanks for sharing your feedback!");
     } catch (error) {
-      setStatus(error.response?.data?.message || "Could not submit feedback. Please try again.");
+      setStatus(
+        error.response?.data?.message ||
+          "Could not submit feedback. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <footer id="footer" className="bg-[#2a110a] text-white mt-10 rounded-t-[3rem] shadow-[0_-20px_50px_rgb(0,0,0,0.05)]">
+    <footer
+      id="footer"
+      className="bg-[#2a110a] text-white mt-10 rounded-t-[3rem] shadow-[0_-20px_50px_rgb(0,0,0,0.05)]"
+    >
       <div className="max-w-7xl mx-auto px-4 md:px-10 py-20 grid md:grid-cols-2 gap-16 items-center">
         <div>
           <h1 className="text-4xl md:text-5xl font-black mb-6 tracking-tight text-white/90">
@@ -71,12 +92,16 @@ function Footer() {
 
           <div className="mt-10 space-y-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl border border-white/10">📞</div>
+              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl border border-white/10">
+                📞
+              </div>
               <p className="text-lg font-bold text-white/80">+91 89034 12927</p>
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl border border-white/10">📍</div>
+              <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl border border-white/10">
+                📍
+              </div>
               <p className="text-lg font-bold text-white/80 max-w-[250px] leading-tight">
                 Inside SASTRA Deemed University, Thanjavur
               </p>
@@ -113,7 +138,9 @@ function Footer() {
             id="feedback"
             className="rounded-[2.5rem] bg-white/10 border border-white/10 p-8 min-h-[350px] md:min-h-[400px] flex flex-col justify-center"
           >
-            <p className="text-orange-300 text-sm font-black tracking-[0.2em] uppercase">Feedback</p>
+            <p className="text-orange-300 text-sm font-black tracking-[0.2em] uppercase">
+              Feedback
+            </p>
             <h2 className="text-3xl font-black mt-3">How was your visit?</h2>
             {isLoggedIn ? (
               <form onSubmit={handleSubmit} className="mt-6">
@@ -132,11 +159,17 @@ function Footer() {
                 >
                   {isSubmitting ? "Sending..." : "Send Feedback"}
                 </button>
-                {status && <p className="mt-3 text-sm font-semibold text-orange-200">{status}</p>}
+                {status && (
+                  <p className="mt-3 text-sm font-semibold text-orange-200">
+                    {status}
+                  </p>
+                )}
               </form>
             ) : (
               <div className="mt-5 space-y-3">
-                <p className="text-white/60 font-medium">Log in to share your feedback with us.</p>
+                <p className="text-white/60 font-medium">
+                  Log in to share your feedback with us.
+                </p>
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={() => alert("Google sign in failed")}
@@ -149,10 +182,28 @@ function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/10 py-8 text-center">
-        <p className="text-white/40 font-semibold text-sm tracking-widest uppercase">
-          © {new Date().getFullYear()} VELAA CAFÉ. All rights reserved.
+      <div
+        id="developers"
+        className="vela-chase-track"
+        aria-label="Vela Café chase animation"
+      >
+        <div className="vela-nyan-stars" aria-hidden="true" />
+        <p className="vela-chase-caption">
+          Catch the developers : pranav & teja😂
         </p>
+
+        <div className="vela-chase-character vela-chase-us" aria-hidden="true">
+          <img src="/vela-chase-us.png" alt="" draggable="false" />
+        </div>
+
+        <button
+          type="button"
+          className="vela-chase-character vela-chase-cat"
+          aria-label="Catch the developers"
+          onClick={handleDeveloperClick}
+        >
+          <img src="/vela-chase-cat.gif" alt="" draggable="false" />
+        </button>
       </div>
     </footer>
   );

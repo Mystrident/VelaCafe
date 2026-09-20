@@ -125,24 +125,35 @@ function Navbar() {
         className="fixed top-0 left-0 w-full z-50 border-b border-cafe-border bg-cafe-surface/90 backdrop-blur-lg shadow-sm"
       >
         <div className="max-w-7xl mx-auto px-4 md:px-10 py-4 flex justify-between items-center">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-3 text-left"
-          >
-            <img
-              src="/vela_cafe_logo.jpeg"
-              alt="Velaa Cafe"
-              className="w-12 h-12 md:w-14 md:h-14 object-cover rounded-full shadow-sm"
-            />
-            <span>
-              <span className="block text-2xl md:text-3xl font-black text-cafe-text tracking-tight">
-                VELAA
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-3 text-left"
+            >
+              <img
+                src="/vela_cafe_logo.jpeg"
+                alt="Velaa Cafe"
+                className="w-12 h-12 md:w-14 md:h-14 object-cover rounded-full shadow-sm"
+              />
+              <span>
+                <span className="block text-2xl md:text-3xl font-black text-cafe-text tracking-tight">
+                  VELAA
+                </span>
+                <span className="block text-[10px] md:text-xs tracking-[0.3em] text-cafe-muted font-semibold">
+                  CAFÉ
+                </span>
               </span>
-              <span className="block text-[10px] md:text-xs tracking-[0.3em] text-cafe-muted font-semibold">
-                CAFÉ
-              </span>
-            </span>
-          </button>
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollTo("developers")}
+              className="vela-header-cat"
+              aria-label="Catch the developers"
+            >
+              <img src="/velaclickme.gif" alt="" />
+              <span>click me</span>
+            </button>
+          </div>
           <div className="flex items-center gap-4 md:gap-10 font-bold text-cafe-text text-sm tracking-wide">
             <div className="hidden md:flex items-center gap-10">
               <button

@@ -23,22 +23,58 @@
 
 .feedback-glow-button {
   background: linear-gradient(135deg, #fed7aa, #fb923c);
-  box-shadow: 0 0 0 1px rgb(251 146 60 / 35%), 0 0 22px rgb(251 146 60 / 55%);
+  box-shadow:
+    0 0 0 1px rgb(251 146 60 / 35%),
+    0 0 22px rgb(251 146 60 / 55%);
   animation: feedbackGlow 2s ease-in-out infinite;
 }
 
+.vela-header-cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0.15rem 0.35rem;
+  color: #f97316;
+  font-size: 0.6rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.vela-header-cat:hover,
+.vela-header-cat:focus-visible {
+  filter: drop-shadow(0 0 7px rgb(249 115 22 / 75%));
+  transform: translateY(-2px) scale(1.05);
+}
+
+.vela-header-cat img {
+  width: 3.1rem;
+  height: 2rem;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
 @keyframes feedbackGlow {
-  0%, 100% {
-    box-shadow: 0 0 0 1px rgb(251 146 60 / 35%), 0 0 18px rgb(251 146 60 / 45%);
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgb(251 146 60 / 35%),
+      0 0 18px rgb(251 146 60 / 45%);
   }
   50% {
-    box-shadow: 0 0 0 1px rgb(251 146 60 / 55%), 0 0 30px rgb(251 146 60 / 75%);
+    box-shadow:
+      0 0 0 1px rgb(251 146 60 / 55%),
+      0 0 30px rgb(251 146 60 / 75%);
   }
 }
 
 /* 2. Global Base Styles Injection */
 @layer base {
-  html, body {
+  html,
+  body {
     /* This forces the Outfit font (sans), smooths the text, and sets the background globally */
     @apply font-sans antialiased bg-cafe-bg text-cafe-text m-0 p-0;
     scroll-behavior: smooth;
@@ -46,9 +82,11 @@
 }
 
 /* 3. Aggressive Scrollbar Removal */
-html, body, * {
-  -ms-overflow-style: none !important;  
-  scrollbar-width: none !important;  
+html,
+body,
+* {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
 *::-webkit-scrollbar,
@@ -59,4 +97,218 @@ body::-webkit-scrollbar {
   height: 0px !important;
   background: transparent !important;
   -webkit-appearance: none !important;
+}
+
+/* Vela Café footer chase animation */
+.vela-chase-track {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  height: 15rem;
+  background-color: #134670;
+}
+
+/* The star tile is derived from the supplied animated cat artwork. */
+.vela-nyan-stars,
+.vela-nyan-stars::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background-image: url("/vela-chase-stars.png");
+  background-repeat: repeat-x;
+  background-size: 220px 139px;
+  image-rendering: pixelated;
+}
+
+.vela-nyan-stars {
+  z-index: 0;
+  background-position: 0 0;
+  opacity: 0.95;
+  animation:
+    velaStarsDrift 14s linear infinite,
+    velaStarsTwinkle 2.8s steps(2, end) infinite;
+}
+
+/* A second offset layer fills the strip with more of the original star pattern. */
+.vela-nyan-stars::after {
+  background-position: 160px -145px;
+  opacity: 0.72;
+  animation:
+    velaStarsDriftReverse 18s linear infinite,
+    velaStarsTwinkle 3.6s steps(2, end) infinite reverse;
+}
+
+.vela-chase-caption {
+  position: absolute;
+  top: 0.35rem;
+  left: 50%;
+  z-index: 3;
+  margin: 0;
+  color: #fff7ed;
+  font-size: clamp(1.1rem, 2.5vw, 2rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-shadow:
+    0 0 5px #fb923c,
+    0 0 14px #f97316,
+    0 0 28px #ea580c;
+  transform: translateX(-50%);
+  animation: velaCaptionGlow 2s ease-in-out infinite;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.vela-chase-character {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font: inherit;
+  will-change: transform;
+  transform: translate3d(-25vw, -50%, 0);
+  animation: velaChaseAcross 17s linear infinite;
+}
+
+.vela-chase-character img {
+  display: block;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* The people stay just ahead of the cat. */
+.vela-chase-us {
+  z-index: 2;
+}
+
+.vela-chase-us img {
+  width: clamp(250px, 32vw, 400px);
+  max-height: 230px;
+}
+
+.vela-chase-cat {
+  z-index: 1;
+  animation-name: velaChaseCatAcross;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.vela-chase-cat img {
+  width: clamp(220px, 27vw, 330px);
+  max-height: 220px;
+}
+
+.vela-chase-click-me {
+  position: absolute;
+  top: calc(100% - 0.75rem);
+  left: 50%;
+  color: #fff7ed;
+  font-family: "Comic Sans MS", "Trebuchet MS", cursive;
+  font-size: clamp(0.9rem, 1.4vw, 1.15rem);
+  font-weight: 700;
+  text-shadow: 0 0 6px #fb923c, 0 0 12px #f97316;
+  transform: translateX(-50%) rotate(-3deg);
+  white-space: nowrap;
+}
+
+/*
+ * Start outside the left edge and finish outside the right edge.
+ * Restarting the keyframe places each image back at the left, creating
+ * a continuous wrap-around instead of stopping at either edge.
+ */
+@keyframes velaChaseAcross {
+  from {
+    transform: translate3d(-25vw, -50%, 0);
+  }
+  to {
+    transform: translate3d(125vw, -50%, 0);
+  }
+}
+
+@keyframes velaChaseCatAcross {
+  from {
+    transform: translate3d(-45vw, -50%, 0);
+  }
+  to {
+    transform: translate3d(105vw, -50%, 0);
+  }
+}
+
+@keyframes velaStarsDrift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -320px 0;
+  }
+}
+
+@keyframes velaStarsDriftReverse {
+  from {
+    background-position: 160px -145px;
+  }
+  to {
+    background-position: 480px -145px;
+  }
+}
+
+@keyframes velaStarsTwinkle {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+
+  @keyframes velaCaptionGlow {
+    0%,
+    100% {
+      filter: brightness(0.95);
+      text-shadow:
+        0 0 5px #fb923c,
+        0 0 14px #f97316,
+        0 0 28px #ea580c;
+    }
+    50% {
+      filter: brightness(1.2);
+      text-shadow:
+        0 0 8px #fed7aa,
+        0 0 20px #fb923c,
+        0 0 36px #f97316;
+    }
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (min-width: 768px) {
+  .vela-chase-track {
+    height: 17rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vela-chase-character,
+  .vela-nyan-stars,
+  .vela-nyan-stars::after,
+  .vela-chase-caption {
+    animation: none;
+  }
+
+  .vela-chase-character {
+    transform: translate3d(50vw, -50%, 0);
+  }
+
+  .vela-chase-cat {
+    transform: translate3d(25vw, -50%, 0);
+  }
 }
