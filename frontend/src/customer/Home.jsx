@@ -121,15 +121,43 @@ function Home() {
 
   useEffect(() => {
     const targetId = window.location.hash.slice(1);
-    if (targetId) {
-      window.setTimeout(() => {
+    if (!targetId || isFetching) return undefined;
+
+    let cancelled = false;
+    const scrollToHashTarget = async () => {
+      if (document.fonts?.ready) {
+        await document.fonts.ready;
+      }
+
+      const images = Array.from(document.images);
+      await Promise.all(
+        images
+          .filter((image) => !image.complete)
+          .map((image) =>
+            new Promise((resolve) => {
+              image.addEventListener("load", resolve, { once: true });
+              image.addEventListener("error", resolve, { once: true });
+            }),
+          ),
+      );
+
+      await new Promise((resolve) =>
+        window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)),
+      );
+
+      if (!cancelled) {
         document.getElementById(targetId)?.scrollIntoView({
           behavior: "smooth",
           block: "start",
         });
-      }, 0);
-    }
-  }, []);
+      }
+    };
+
+    scrollToHashTarget();
+    return () => {
+      cancelled = true;
+    };
+  }, [isFetching]);
 
   const fetchItems = async () => {
     try {
