@@ -63,8 +63,8 @@ function HeroCarousel() {
   };
 
   const scrollToFeedback = () => {
-    window.history.replaceState(null, "", "/#footer");
-    document.getElementById("footer")?.scrollIntoView({ behavior: "smooth" });
+    window.history.replaceState(null, "", "/#feedback");
+    document.getElementById("feedback")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (

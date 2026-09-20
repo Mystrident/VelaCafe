@@ -95,7 +95,7 @@ function Footer() {
             className="border-0 w-full h-full grayscale-[20%] contrast-[1.1]"
           />
         </div>
-        <div className="rounded-[2.5rem] bg-white/10 border border-white/10 p-8 min-h-[350px] md:min-h-[400px] flex flex-col justify-center">
+        <div id="feedback" className="rounded-[2.5rem] bg-white/10 border border-white/10 p-8 min-h-[350px] md:min-h-[400px] flex flex-col justify-center">
           <p className="text-orange-300 text-sm font-black tracking-[0.2em] uppercase">Feedback</p>
           <h2 className="text-3xl font-black mt-3">How was your visit?</h2>
           {isLoggedIn ? (
