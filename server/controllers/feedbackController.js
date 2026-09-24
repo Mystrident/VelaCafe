@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 const Feedback = require("../models/Feedback");
 const User = require("../models/User");
+const {
+  sendFeedbackPushNotification,
+} = require("../services/pushNotificationService");
 
 const serializeFeedback = (entry) => ({
   _id: entry._id,
@@ -64,6 +67,12 @@ const createFeedback = async (req, res) => {
       name: user.name,
       feedback,
     });
+
+    // Do not make the customer wait for push delivery. Every admin browser
+    // with an active subscription is handled by the notification service.
+    sendFeedbackPushNotification(savedFeedback).catch((error) =>
+      console.error("Feedback push notification failed:", error),
+    );
 
     res.status(201).json({
       message: "Thank you for your feedback",

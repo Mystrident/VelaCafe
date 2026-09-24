@@ -68,4 +68,44 @@ const sendOrderPushNotification = async (order) => {
   );
 };
 
-module.exports = { getPublicKey, saveSubscription, sendOrderPushNotification };
+const sendFeedbackPushNotification = async (feedback) => {
+  if (!configureWebPush()) {
+    console.warn("Web Push is not configured; feedback push notification skipped.");
+    return;
+  }
+
+  const admins = await Admin.find({ "pushSubscriptions.0": { $exists: true } })
+    .select("pushSubscriptions");
+  const feedbackPreview = feedback.feedback.replace(/\s+/g, " ").trim();
+  const payload = JSON.stringify({
+    title: "New customer feedback",
+    body: `${feedback.name}: ${feedbackPreview.slice(0, 140)}${feedbackPreview.length > 140 ? "…" : ""}`,
+    url: "/feedbacks",
+  });
+
+  await Promise.all(
+    admins.flatMap((admin) =>
+      admin.pushSubscriptions.map(async (subscription) => {
+        try {
+          await webpush.sendNotification(subscription.toObject(), payload);
+        } catch (error) {
+          if (error.statusCode === 404 || error.statusCode === 410) {
+            await Admin.updateOne(
+              { _id: admin._id },
+              { $pull: { pushSubscriptions: { endpoint: subscription.endpoint } } },
+            );
+            return;
+          }
+          throw error;
+        }
+      }),
+    ),
+  );
+};
+
+module.exports = {
+  getPublicKey,
+  saveSubscription,
+  sendOrderPushNotification,
+  sendFeedbackPushNotification,
+};

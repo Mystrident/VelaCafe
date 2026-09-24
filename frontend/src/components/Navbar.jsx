@@ -368,6 +368,9 @@ function Navbar() {
                 <p className="px-2 text-xs font-black tracking-[0.16em] text-cafe-muted">
                   CAFE REPLIES
                 </p>
+                <p className="mt-2 px-2 text-sm font-medium leading-relaxed text-cafe-muted">
+                  We do care about your replies and use them to improve.
+                </p>
                 {repliedFeedbacks.length === 0 ? (
                   <p className="mt-3 px-2 text-sm font-medium leading-relaxed text-cafe-muted">
                     Replies to your feedback will appear here.
