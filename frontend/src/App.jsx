@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./customer/Home";
 import SastranetSso from "./customer/SastranetSso";
 import MyOrders from "./customer/MyOrders";
+import MyFeedback from "./customer/MyFeedback";
 
 import Login from "./admin/Login";
 
@@ -30,6 +31,15 @@ function App() {
           element={
             <CustomerProtectedRoute>
               <MyOrders />
+            </CustomerProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/my-feedback"
+          element={
+            <CustomerProtectedRoute>
+              <MyFeedback />
             </CustomerProtectedRoute>
           }
         />

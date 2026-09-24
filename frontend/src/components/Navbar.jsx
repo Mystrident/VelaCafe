@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import {
   HiClipboardList,
+  HiChatAlt2,
   HiLogout,
   HiMenu,
   HiMoon,
@@ -18,6 +19,14 @@ import {
 } from "../utils/customerProfile";
 import { useTheme } from "../hooks/useTheme";
 
+const SEEN_FEEDBACK_REPLIES_KEY = "seenFeedbackReplies";
+
+const formatFeedbackDate = (value) =>
+  new Date(value).toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
 function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,6 +41,8 @@ function Navbar() {
   const [signInOpen, setSignInOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [profile, setProfile] = useState(getCustomerProfile);
+  const [customerFeedback, setCustomerFeedback] = useState([]);
+  const [feedbackReplyQueue, setFeedbackReplyQueue] = useState([]);
 
   useEffect(() => {
     const syncAuthenticationState = () => {
@@ -51,6 +62,58 @@ function Navbar() {
       );
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!isLoggedIn) {
+      setCustomerFeedback([]);
+      setFeedbackReplyQueue([]);
+      return undefined;
+    }
+
+    const loadCustomerFeedback = async () => {
+      try {
+        const response = await api.get("/api/feedback/mine", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("customerToken")}`,
+          },
+        });
+
+        if (cancelled) return;
+
+        const feedbacks = response.data;
+        setCustomerFeedback(feedbacks);
+
+        let seenReplies = {};
+        try {
+          seenReplies = JSON.parse(
+            localStorage.getItem(SEEN_FEEDBACK_REPLIES_KEY) || "{}",
+          );
+        } catch {
+          localStorage.removeItem(SEEN_FEEDBACK_REPLIES_KEY);
+        }
+
+        setFeedbackReplyQueue(
+          feedbacks.filter(
+            (entry) =>
+              entry.adminReply &&
+              seenReplies[entry._id] !== (entry.repliedAt || entry.createdAt),
+          ),
+        );
+      } catch (error) {
+        if (error.response?.status === 401) {
+          localStorage.removeItem("customerToken");
+          window.dispatchEvent(new Event("customer-auth-changed"));
+        }
+      }
+    };
+
+    loadCustomerFeedback();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (!drawerOpen) return undefined;
@@ -99,6 +162,35 @@ function Navbar() {
       alert(error.response?.data?.message || "Google sign in failed");
     }
   };
+
+  const dismissFeedbackReply = (openFeedback = false) => {
+    const currentReply = feedbackReplyQueue[0];
+    if (!currentReply) return;
+
+    let seenReplies = {};
+    try {
+      seenReplies = JSON.parse(
+        localStorage.getItem(SEEN_FEEDBACK_REPLIES_KEY) || "{}",
+      );
+    } catch {
+      // Start fresh if a damaged local-storage value is present.
+    }
+
+    seenReplies[currentReply._id] =
+      currentReply.repliedAt || currentReply.createdAt;
+    localStorage.setItem(
+      SEEN_FEEDBACK_REPLIES_KEY,
+      JSON.stringify(seenReplies),
+    );
+    setFeedbackReplyQueue((current) => current.slice(1));
+
+    if (openFeedback) {
+      setDrawerOpen(false);
+      navigate("/my-feedback");
+    }
+  };
+
+  const repliedFeedbacks = customerFeedback.filter((entry) => entry.adminReply);
 
   const initials =
     profile?.name
@@ -212,7 +304,7 @@ function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 32 }}
-              className="fixed right-0 top-0 z-[70] flex h-dvh w-full max-w-sm flex-col border-l border-cafe-border bg-cafe-surface p-6 shadow-2xl"
+              className="fixed right-0 top-0 z-[70] flex h-dvh w-full max-w-sm flex-col overflow-y-auto border-l border-cafe-border bg-cafe-surface p-6 shadow-2xl"
             >
               <div className="flex items-center justify-between">
                 <p className="text-xs font-black tracking-[0.2em] text-orange-500">
@@ -249,7 +341,7 @@ function Navbar() {
               </div>
               <div className="mt-8">
                 <p className="px-2 text-xs font-black tracking-[0.16em] text-cafe-muted">
-                  ACCOUNT / ORDERS
+                  ACCOUNT
                 </p>
                 <button
                   onClick={() => {
@@ -261,6 +353,52 @@ function Navbar() {
                   <HiClipboardList className="text-xl text-orange-500" />
                   My Orders
                 </button>
+                <button
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    navigate("/my-feedback");
+                  }}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3.5 font-bold text-cafe-text hover:bg-cafe-elevated"
+                >
+                  <HiChatAlt2 className="text-xl text-orange-500" />
+                  My Feedback
+                </button>
+              </div>
+              <div className="mt-6">
+                <p className="px-2 text-xs font-black tracking-[0.16em] text-cafe-muted">
+                  CAFE REPLIES
+                </p>
+                {repliedFeedbacks.length === 0 ? (
+                  <p className="mt-3 px-2 text-sm font-medium leading-relaxed text-cafe-muted">
+                    Replies to your feedback will appear here.
+                  </p>
+                ) : (
+                  <div className="mt-3 space-y-3">
+                    {repliedFeedbacks.map((entry) => (
+                      <button
+                        key={entry._id}
+                        type="button"
+                        onClick={() => {
+                          setDrawerOpen(false);
+                          navigate("/my-feedback");
+                        }}
+                        className="w-full rounded-2xl border border-orange-100 bg-orange-50 p-4 text-left transition-colors hover:border-orange-300 dark:border-orange-900/40 dark:bg-orange-950/30"
+                      >
+                        <p className="text-xs font-black uppercase tracking-wider text-orange-600 dark:text-orange-300">
+                          Velaa Cafe replied
+                        </p>
+                        <p className="mt-2 line-clamp-3 text-sm font-medium leading-relaxed text-cafe-text">
+                          {entry.adminReply}
+                        </p>
+                        {entry.repliedAt && (
+                          <p className="mt-2 text-xs font-semibold text-orange-500/70 dark:text-orange-300/70">
+                            {formatFeedbackDate(entry.repliedAt)}
+                          </p>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="mt-6">
                 <p className="px-2 text-xs font-black tracking-[0.16em] text-cafe-muted">
@@ -300,6 +438,64 @@ function Navbar() {
               )}
             </motion.aside>
           </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {feedbackReplyQueue[0] && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#2a110a]/55 px-4 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.96 }}
+              className="w-full max-w-md rounded-[2rem] border border-orange-100 bg-cafe-surface p-6 shadow-2xl md:p-8"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-500">
+                    New reply
+                  </p>
+                  <h2 className="mt-2 text-2xl font-black text-cafe-text">
+                    Velaa Cafe replied to you
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => dismissFeedbackReply()}
+                  aria-label="Close feedback reply"
+                  className="rounded-xl p-2 text-cafe-muted hover:bg-cafe-elevated hover:text-cafe-text"
+                >
+                  <HiX className="text-2xl" />
+                </button>
+              </div>
+              <div className="mt-6 rounded-2xl border border-orange-100 bg-orange-50 p-4 dark:border-orange-900/40 dark:bg-orange-950/30">
+                <p className="text-sm font-medium leading-relaxed text-cafe-text">
+                  {feedbackReplyQueue[0].adminReply}
+                </p>
+              </div>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => dismissFeedbackReply()}
+                  className="rounded-xl border border-cafe-border px-4 py-3 text-sm font-bold text-cafe-text hover:bg-cafe-elevated"
+                >
+                  Got it
+                </button>
+                <button
+                  type="button"
+                  onClick={() => dismissFeedbackReply(true)}
+                  className="rounded-xl bg-orange-500 px-4 py-3 text-sm font-bold text-white hover:bg-orange-600"
+                >
+                  View my feedback
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

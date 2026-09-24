@@ -1,25 +1,41 @@
+const mongoose = require("mongoose");
 const Feedback = require("../models/Feedback");
 const User = require("../models/User");
+
+const serializeFeedback = (entry) => ({
+  _id: entry._id,
+  name: entry.name,
+  email: entry.email || entry.userId?.email || "",
+  feedback: entry.feedback,
+  adminReply: entry.adminReply || "",
+  repliedAt: entry.repliedAt || null,
+  createdAt: entry.createdAt,
+});
 
 const getFeedbacks = async (req, res) => {
   try {
     const feedbacks = await Feedback.find()
-      .select("name email feedback createdAt userId")
+      .select("name email feedback adminReply repliedAt createdAt userId")
       .populate("userId", "email")
       .sort({ createdAt: -1 });
 
-    res.json(
-      feedbacks.map((entry) => ({
-        _id: entry._id,
-        name: entry.name,
-        email: entry.email || entry.userId?.email || "",
-        feedback: entry.feedback,
-        createdAt: entry.createdAt,
-      })),
-    );
+    res.json(feedbacks.map(serializeFeedback));
   } catch (error) {
     console.error("Failed to load feedback:", error);
     res.status(500).json({ message: "Could not load feedback" });
+  }
+};
+
+const getMyFeedbacks = async (req, res) => {
+  try {
+    const feedbacks = await Feedback.find({ userId: req.user.id })
+      .select("feedback adminReply repliedAt createdAt")
+      .sort({ createdAt: -1 });
+
+    res.json(feedbacks.map(serializeFeedback));
+  } catch (error) {
+    console.error("Failed to load customer feedback:", error);
+    res.status(500).json({ message: "Could not load your feedback" });
   }
 };
 
@@ -51,7 +67,7 @@ const createFeedback = async (req, res) => {
 
     res.status(201).json({
       message: "Thank you for your feedback",
-      feedback: savedFeedback,
+      feedback: serializeFeedback(savedFeedback),
     });
   } catch (error) {
     console.error("Failed to save feedback:", error);
@@ -59,4 +75,37 @@ const createFeedback = async (req, res) => {
   }
 };
 
-module.exports = { createFeedback, getFeedbacks };
+const replyToFeedback = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+
+    const reply = typeof req.body.reply === "string" ? req.body.reply.trim() : "";
+
+    if (!reply) {
+      return res.status(400).json({ message: "Reply is required" });
+    }
+
+    if (reply.length > 1000) {
+      return res.status(400).json({ message: "Reply must be 1000 characters or fewer" });
+    }
+
+    const feedback = await Feedback.findByIdAndUpdate(
+      req.params.id,
+      { adminReply: reply, repliedAt: new Date() },
+      { new: true, runValidators: true },
+    );
+
+    if (!feedback) {
+      return res.status(404).json({ message: "Feedback not found" });
+    }
+
+    res.json({ message: "Reply saved", feedback: serializeFeedback(feedback) });
+  } catch (error) {
+    console.error("Failed to reply to feedback:", error);
+    res.status(500).json({ message: "Could not save reply" });
+  }
+};
+
+module.exports = { createFeedback, getFeedbacks, getMyFeedbacks, replyToFeedback };

@@ -25,8 +25,20 @@ const feedbackSchema = new mongoose.Schema(
       minlength: 1,
       maxlength: 1000,
     },
+    adminReply: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+      default: "",
+    },
+    repliedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );
+
+feedbackSchema.index({ userId: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Feedback", feedbackSchema);
