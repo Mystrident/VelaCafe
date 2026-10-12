@@ -1,11 +1,8 @@
-const optimizeImage = (url, width = 500) => {
+const optimizeImage = (url) => {
   if (!url) return "";
 
-  if (!url.includes("cloudinary")) {
-    return url;
-  }
-
-  return url.replace("/upload/", `/upload/f_auto,q_auto,w_${width}/`);
+  // Keep stored CDN URLs intact; this also preserves legacy records.
+  return url;
 };
 
 export default optimizeImage;

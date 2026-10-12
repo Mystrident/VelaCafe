@@ -27,6 +27,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const userAuthRoutes = require("./routes/userAuthRoutes");
 const { razorpayWebhook } = require("./controllers/paymentController");
+const uploadthingRouter = require("./config/uploadthing");
 
 const app = express();
 
@@ -119,6 +120,10 @@ app.disable("x-powered-by");
 app.use(helmet());
 
 app.use(cors(corsOptions));
+
+// UploadThing reads its own request body, so it must be registered before the
+// global JSON parser. The route authenticates admins in its middleware.
+app.use("/uploadthing", uploadthingRouter);
 
 // Registered BEFORE express.json() and with its own raw-body parser: the
 // webhook's HMAC signature is computed over the exact raw bytes Razorpay

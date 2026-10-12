@@ -29,10 +29,8 @@ const SplitText = ({ text, delay = 0, className = "" }) => {
 
 function HeroCarousel() {
   const images = [
-    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780155195/14_c3w7ml.jpg",
-    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780155194/13_l3psqu.jpg",
-    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780155193/9_ljs2dz.jpg",
-    "https://res.cloudinary.com/dxxffbmcs/image/upload/v1780155193/12_tieco3.jpg",
+    "/vela_cafe_logo.jpeg",
+    "/images.jpg",
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
