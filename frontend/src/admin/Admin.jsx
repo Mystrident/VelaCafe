@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 import api from "../api/axios";
 import AdminNavbar from "../components/AdminNavbar";
 import Loader from "../components/Loader";
+import { useUploadThing } from "../utils/uploadthing";
 
 function Admin() {
   const [name, setName] = useState("");
@@ -18,6 +19,12 @@ function Admin() {
   const [editingOfferId, setEditingOfferId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
+  const { startUpload, isUploading } = useUploadThing("productImage", {
+    headers: () => {
+      const token = localStorage.getItem("token");
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    },
+  });
 
   useEffect(() => {
     fetchItems();
@@ -60,16 +67,28 @@ function Admin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!image) {
+      alert("Please select a product image.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("price", price);
-      formData.append("stock", stock);
-      formData.append("category", category); // NEW: Sending Category to Backend
-      formData.append("image", image);
+      const uploadedFiles = await startUpload([image]);
+      const uploadedImage = uploadedFiles?.[0];
+      const imageUrl = uploadedImage?.ufsUrl || uploadedImage?.url;
 
-      await api.post("/api/items", formData);
+      if (!imageUrl) {
+        throw new Error("UploadThing did not return an image URL.");
+      }
+
+      await api.post("/api/items", {
+        name,
+        price,
+        stock,
+        category,
+        image: imageUrl,
+      });
       alert("Item Added Successfully");
       
       // Reset Form
@@ -214,11 +233,11 @@ function Admin() {
                 <option value="Traditional Snacks">Traditional Snacks</option>
               </select>
 
-              <input id="imageInput" type="file" onChange={(e) => setImage(e.target.files[0])} className="w-full bg-gray-50 border border-gray-100 p-3.5 rounded-2xl outline-none text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100 cursor-pointer" required />
+              <input id="imageInput" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setImage(e.target.files[0])} className="w-full bg-gray-50 border border-gray-100 p-3.5 rounded-2xl outline-none text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100 cursor-pointer" required />
             </div>
             
-            <button type="submit" disabled={loading} className="mt-8 bg-[#3a1710] text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-orange-500 transition-colors shadow-lg shadow-[#3a1710]/20 active:scale-[0.98] disabled:opacity-50">
-              {loading ? "Adding Item..." : "+ Add Item to Menu"}
+            <button type="submit" disabled={loading || isUploading} className="mt-8 bg-[#3a1710] text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-orange-500 transition-colors shadow-lg shadow-[#3a1710]/20 active:scale-[0.98] disabled:opacity-50">
+              {isUploading ? "Uploading Image..." : loading ? "Adding Item..." : "+ Add Item to Menu"}
             </button>
           </form>
         </motion.div>

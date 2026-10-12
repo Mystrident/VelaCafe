@@ -1,6 +1,25 @@
 const { body, param, validationResult } = require("express-validator");
 const mongoose = require("mongoose");
 
+const isTrustedUploadThingUrl = (value) => {
+  try {
+    const url = new URL(value);
+    const hosts = (process.env.UPLOADTHING_FILE_URL_HOSTS || "utfs.io,ufs.sh")
+      .split(",")
+      .map((host) => host.trim().toLowerCase())
+      .filter(Boolean);
+    const hostname = url.hostname.toLowerCase();
+
+    return (
+      url.protocol === "https:" &&
+      url.pathname.startsWith("/f/") &&
+      hosts.some((host) => hostname === host || hostname.endsWith(`.${host}`))
+    );
+  } catch {
+    return false;
+  }
+};
+
 const validateOrder = [
   body("pickupTime")
     .trim()
@@ -53,6 +72,12 @@ const validateItem = [
       max: 5000,
     })
     .withMessage("Price must be between 1 and 5000"),
+  body("image")
+    .isString()
+    .withMessage("A product image is required")
+    .bail()
+    .custom(isTrustedUploadThingUrl)
+    .withMessage("Image must be an UploadThing file URL"),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

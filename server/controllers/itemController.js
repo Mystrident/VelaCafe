@@ -96,7 +96,7 @@ const addItem = async (req, res) => {
       price,
       category: category || "Uncategorized",
       stock: Math.min(safeStock, 10000),
-      image: req.file ? req.file.path : "",
+      image: req.body.image,
     });
 
     await item.save();
